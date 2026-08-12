@@ -54,7 +54,6 @@ function setupCustomAutocomplete(inputEl) {
             dropdownContainer = null;
         }
         selectedIndex = -1;
-        predictions = [];
     };
 
     const renderDropdown = () => {
