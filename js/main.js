@@ -5,6 +5,7 @@ import { setupCustomAutocomplete } from './api/autocomplete.js';
 import { initGeocode } from './features/geocode.js';
 import { initDirections } from './features/directions.js';
 import { initPlaces } from './features/places.js';
+import { applyI18n } from './ui/i18n_apply.js';
 
 // Expose initMap to the global window object so Google Maps API callback can find it
 window.initMap = function() {
@@ -51,6 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         dateSpan.textContent = new Date().toLocaleDateString('en-US', options).toUpperCase();
     }
+    
+    // 1. Check Auth (Simple Simulation)
+    if (!localStorage.getItem('news_auth_token')) {
+        console.log("No auth token found. Running as guest.");
+    }
+
+    // 1.5 Apply i18n translations
+    applyI18n();
 
     // 2. Initialize UI Components
     initTabs();
