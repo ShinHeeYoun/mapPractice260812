@@ -208,15 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const directionsBtn = document.getElementById('directions-btn');
 
     if (directionsBtn) {
-        const triggerDir = (e) => {
-            if (e.key === 'Enter' && !e.isComposing) {
-                e.preventDefault();
-                directionsBtn.click();
-            }
-        };
-        originInput.addEventListener('keydown', triggerDir);
-        destinationInput.addEventListener('keydown', triggerDir);
-
         directionsBtn.addEventListener('click', () => {
             const origin = originInput.value.trim();
             const destination = destinationInput.value.trim();
