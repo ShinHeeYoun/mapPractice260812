@@ -21,7 +21,7 @@
     <title>THE MAP PRACTICE TIMES</title>
     <link rel="stylesheet" href="css/style.css">
     <% if (!apiKey.isEmpty()) { %>
-    <script src="https://maps.googleapis.com/maps/api/js?key=<%=apiKey%>&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%=apiKey%>&callback=initMap&libraries=places" async defer></script>
     <% } else { %>
     <script>console.error("Google Maps API Key not found in config.properties");</script>
     <% } %>
@@ -43,7 +43,13 @@
             <h2>CONTENTS</h2>
             <ul id="nav-tabs">
                 <li><a href="#" data-target="section-intro" class="active">I. Introduction</a></li>
-                <li><a href="#" data-target="section-map">II. Map</a></li>
+                <li>
+                    <span class="nav-category">II. Map</span>
+                    <ul class="sub-nav">
+                        <li><a href="#" data-target="section-map-geocode">A. Geocoding</a></li>
+                        <li><a href="#" data-target="section-map-directions">B. Directions</a></li>
+                    </ul>
+                </li>
             </ul>
         </nav>
 
@@ -55,31 +61,51 @@
                 <p class="article-text">
                     This is a simple Java Web Application skeleton running on Tomcat 9. 
                     It is designed using a classic black and white newspaper theme.
-                    Currently, we have integrated the Google Maps API for geocoding and visual mapping.
                 </p>
                 <p class="article-text" style="column-count: 1;">
-                    Please navigate to the Map section to use the Telegraphic Mapping Service.
+                    Please navigate to the Map section to use the Telegraphic Mapping Service and Directions.
                 </p>
             </section>
 
-            <!-- Map Section -->
-            <section id="section-map" class="tab-content">
-                <h2 class="article-title">MAP SERVICES</h2>
+            <!-- Geocoding Section -->
+            <section id="section-map-geocode" class="tab-content">
+                <h2 class="article-title">GEOCODING SERVICE</h2>
                 <div class="map-form-container">
-                    <p class="article-text" style="column-count: 1;">Please enter a location to receive its geographic coordinates directly from Google's Telegraphic Mapping Service (API). Press 'Enter' or click the dispatch button.</p>
+                    <p class="article-text" style="column-count: 1;">Enter a location to receive its geographic coordinates.</p>
                     <div class="input-group">
                         <label for="address-input"><strong>Target Location:</strong></label>
                         <input type="text" id="address-input" class="newspaper-input" placeholder="e.g. Seoul Tower">
                         <button id="geocode-btn" class="newspaper-btn">DISPATCH TELEGRAM</button>
                     </div>
                 </div>
-                <div id="map-result-container" class="map-result-container hidden">
-                    <!-- Results will be injected here -->
-                </div>
-                <div id="map-container" class="map-container hidden">
-                    <div id="map"></div>
-                </div>
+                <div id="map-result-container" class="map-result-container hidden"></div>
             </section>
+
+            <!-- Directions Section -->
+            <section id="section-map-directions" class="tab-content">
+                <h2 class="article-title">DIRECTIONS SERVICE</h2>
+                <div class="map-form-container">
+                    <p class="article-text" style="column-count: 1;">Enter your origin and destination to calculate the best transit route, distance, and estimated costs. (Autocomplete is enabled)</p>
+                    <div class="input-group">
+                        <label for="origin-input"><strong>Origin:</strong></label>
+                        <input type="text" id="origin-input" class="newspaper-input" placeholder="e.g. Gangnam Station">
+                    </div>
+                    <div class="input-group">
+                        <label for="destination-input"><strong>Destination:</strong></label>
+                        <input type="text" id="destination-input" class="newspaper-input" placeholder="e.g. Seoul Tower">
+                    </div>
+                    <div class="input-group" style="justify-content: flex-end; margin-top: 15px;">
+                        <button id="directions-btn" class="newspaper-btn">CALCULATE ROUTE</button>
+                    </div>
+                </div>
+                <div id="directions-result-container" class="map-result-container hidden"></div>
+            </section>
+            
+            <!-- Global Map Container (Shared across Geocode and Directions) -->
+            <div id="map-container" class="map-container hidden">
+                <div id="map"></div>
+            </div>
+            
         </main>
     </div>
 

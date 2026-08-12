@@ -1,15 +1,15 @@
 let map;
 let marker;
+let directionsService;
+let directionsRenderer;
 
 // Callback for Google Maps JS API
 function initMap() {
-    // Default location (Seoul)
     const initialLocation = { lat: 37.5665, lng: 126.9780 };
     
     map = new google.maps.Map(document.getElementById("map"), {
         center: initialLocation,
         zoom: 13,
-        // Using a greyscale style to match the newspaper theme
         styles: [
             {
                 featureType: "all",
@@ -23,6 +23,22 @@ function initMap() {
         map: map,
         position: initialLocation,
     });
+
+    // Directions Setup
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: false
+    });
+
+    // Autocomplete Setup
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    
+    if (originInput && destinationInput) {
+        new google.maps.places.Autocomplete(originInput);
+        new google.maps.places.Autocomplete(destinationInput);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Tab Navigation Logic (SPA)
     const tabs = document.querySelectorAll('#nav-tabs a');
     const contents = document.querySelectorAll('.tab-content');
+    const mapContainer = document.getElementById('map-container');
+    const dirResultContainer = document.getElementById('directions-result-container');
+    const resultContainer = document.getElementById('map-result-container');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
@@ -48,18 +67,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const targetId = tab.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
+
+            // Hide map container when switching tabs (unless results exist)
+            if (targetId === 'section-intro') {
+                mapContainer.classList.add('hidden');
+            } else if (targetId === 'section-map-geocode' && !resultContainer.classList.contains('hidden')) {
+                mapContainer.classList.remove('hidden');
+            } else if (targetId === 'section-map-directions' && !dirResultContainer.classList.contains('hidden')) {
+                mapContainer.classList.remove('hidden');
+            } else {
+                mapContainer.classList.add('hidden');
+            }
         });
     });
 
-    // 3. Map API Logic
+    // 3. Geocoding API Logic
     const geocodeBtn = document.getElementById('geocode-btn');
     const addressInput = document.getElementById('address-input');
-    const resultContainer = document.getElementById('map-result-container');
-    const mapContainer = document.getElementById('map-container');
 
     if (geocodeBtn && addressInput) {
         
-        // Support Enter key (Fix for Korean IME delay)
         addressInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.isComposing) {
                 e.preventDefault(); 
@@ -112,8 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
 
-                    // Update visual map
                     if (map && marker) {
+                        // Clear directions if any
+                        if(directionsRenderer) directionsRenderer.setDirections({routes: []});
+                        
+                        marker.setMap(map); // Ensure marker is visible
                         const newPos = { lat: lat, lng: lng };
                         map.setCenter(newPos);
                         map.setZoom(15);
@@ -121,19 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         mapContainer.classList.remove('hidden');
                     }
                     
-                } else if (data.status === 'error') {
-                    resultContainer.innerHTML = `
-                        <div class="newspaper-article-box">
-                            <h3>Communication Error</h3>
-                            <div class="result-row error-text">System Error: ${data.message}</div>
-                        </div>
-                    `;
                 } else {
-                    const statusReason = data.error_message || data.status;
+                    const statusReason = data.error_message || data.message || data.status;
                     resultContainer.innerHTML = `
                         <div class="newspaper-article-box">
                             <h3>Telegram Failed</h3>
-                            <div class="result-row error-text">Could not resolve location. Reason: ${statusReason}</div>
+                            <div class="result-row error-text">Reason: ${statusReason}</div>
                         </div>
                     `;
                 }
@@ -145,10 +168,95 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultContainer.innerHTML = `
                     <div class="newspaper-article-box">
                         <h3>Critical System Failure</h3>
-                        <div class="result-row error-text">Failed to connect to the telegraph office.</div>
                         <div class="result-row">${err.message}</div>
                     </div>
                 `;
+            });
+        });
+    }
+
+    // 4. Directions Logic
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+    const directionsBtn = document.getElementById('directions-btn');
+
+    if (directionsBtn) {
+        const triggerDir = (e) => {
+            if (e.key === 'Enter' && !e.isComposing) {
+                e.preventDefault();
+                directionsBtn.click();
+            }
+        };
+        originInput.addEventListener('keydown', triggerDir);
+        destinationInput.addEventListener('keydown', triggerDir);
+
+        directionsBtn.addEventListener('click', () => {
+            const origin = originInput.value.trim();
+            const destination = destinationInput.value.trim();
+
+            if (!origin || !destination) {
+                alert("Please provide both origin and destination.");
+                return;
+            }
+
+            directionsBtn.textContent = 'CALCULATING...';
+            directionsBtn.disabled = true;
+
+            const request = {
+                origin: origin,
+                destination: destination,
+                travelMode: 'TRANSIT', // Prefer transit for costs
+            };
+
+            directionsService.route(request, (result, status) => {
+                directionsBtn.textContent = 'CALCULATE ROUTE';
+                directionsBtn.disabled = false;
+                
+                dirResultContainer.classList.remove('hidden');
+                
+                if (status === 'OK') {
+                    // Hide geocode marker
+                    if (marker) marker.setMap(null);
+                    
+                    directionsRenderer.setDirections(result);
+                    mapContainer.classList.remove('hidden');
+
+                    const route = result.routes[0];
+                    const leg = route.legs[0];
+                    
+                    const distance = leg.distance.text;
+                    const duration = leg.duration.text;
+                    
+                    let costText = "Not Available / Included";
+                    if (route.fare && route.fare.text) {
+                        costText = route.fare.text;
+                    }
+
+                    dirResultContainer.innerHTML = `
+                        <div class="newspaper-article-box">
+                            <h3>Journey Summary</h3>
+                            <div class="result-row"><span class="result-label">From:</span> ${leg.start_address}</div>
+                            <div class="result-row"><span class="result-label">To:</span> ${leg.end_address}</div>
+                            <div class="result-row"><span class="result-label">Distance:</span> ${distance}</div>
+                            <div class="result-row"><span class="result-label">Est. Time (Transit):</span> ${duration}</div>
+                            <div class="result-row"><span class="result-label">Est. Cost:</span> ${costText}</div>
+                        </div>
+                    `;
+                } else if (status === 'ZERO_RESULTS') {
+                    dirResultContainer.innerHTML = `
+                        <div class="newspaper-article-box">
+                            <h3>Routing Failed</h3>
+                            <div class="result-row error-text">No transit route found between these locations. Try specifying more detail.</div>
+                        </div>
+                    `;
+                } else {
+                    dirResultContainer.innerHTML = `
+                        <div class="newspaper-article-box">
+                            <h3>Routing Failed</h3>
+                            <div class="result-row error-text">Reason: ${status}</div>
+                        </div>
+                    `;
+                }
             });
         });
     }

@@ -214,3 +214,44 @@ body {
     height: 400px;
     width: 100%;
 }
+
+/* Sidebar sub-nav */
+.nav-category {
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sub-nav {
+    list-style: none;
+    padding-left: 15px;
+}
+
+.sub-nav li {
+    margin-bottom: 5px;
+}
+
+/* Autocomplete overriding to match newspaper theme */
+.pac-container {
+    background-color: var(--bg-color);
+    font-family: "Times New Roman", Times, serif;
+    border: 2px solid var(--border-color);
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+.pac-item {
+    padding: 8px;
+    font-size: 1.1rem;
+    border-top: 1px dashed var(--border-color);
+    color: var(--text-color);
+}
+.pac-item:hover, .pac-item-selected {
+    background-color: #e0e0d8;
+}
+.pac-item-query {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #000;
+}
