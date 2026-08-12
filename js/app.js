@@ -215,6 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const lastFocused = document.activeElement;
+
             geocodeBtn.textContent = 'DISPATCHING...';
             geocodeBtn.disabled = true;
 
@@ -236,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 geocodeBtn.textContent = 'DISPATCH TELEGRAM';
                 geocodeBtn.disabled = false;
+                if (lastFocused) lastFocused.focus();
+                
                 resultContainer.classList.remove('hidden');
 
                 if (data.status === 'OK' && data.results && data.results.length > 0) {
@@ -276,6 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 geocodeBtn.textContent = 'DISPATCH TELEGRAM';
                 geocodeBtn.disabled = false;
+                if (lastFocused) lastFocused.focus();
+                
                 resultContainer.classList.remove('hidden');
                 resultContainer.innerHTML = `
                     <div class="newspaper-article-box">
@@ -309,6 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const lastFocused = document.activeElement;
+
             directionsBtn.textContent = 'CALCULATING...';
             directionsBtn.disabled = true;
 
@@ -321,6 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             directionsService.route(request, (result, status) => {
                 directionsBtn.textContent = 'CALCULATE ROUTE';
                 directionsBtn.disabled = false;
+                if (lastFocused) lastFocused.focus();
                 
                 dirResultContainer.classList.remove('hidden');
                 
