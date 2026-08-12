@@ -1,18 +1,6 @@
 import { state, setPlaceMarkers } from '../config/state.js';
 import { i18n } from '../config/i18n.js';
 
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2); 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    return R * c;
-}
-
 export function initPlaces() {
     const placesBtn = document.getElementById('places-btn');
     const placesInput = document.getElementById('places-input');
@@ -34,6 +22,7 @@ export function initPlaces() {
         const address = placesInput.value.trim();
         const type = placesCategory.value;
         const sortBy = placesSort.value;
+        const lang = window.APP_LANG || 'en';
 
         if (!address) {
             alert("Please enter a base location first.");
@@ -64,14 +53,23 @@ export function initPlaces() {
                 state.map.setZoom(15);
             }
 
-            const request = {
-                location: location,
-                radius: 1000,
-                type: type
-            };
-
-            const placesService = new google.maps.places.PlacesService(state.map);
-            placesService.nearbySearch(request, (placesResults, placesStatus) => {
+            // Call our Java Backend for places
+            fetch('service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'places',
+                    data: {
+                        lat: baseLat,
+                        lng: baseLng,
+                        type: type,
+                        sortBy: sortBy,
+                        lang: lang
+                    }
+                })
+            })
+            .then(res => res.json())
+            .then(root => {
                 placesBtn.textContent = 'SEARCH DIRECTORY';
                 placesBtn.disabled = false;
                 if (lastFocused) lastFocused.focus();
@@ -82,31 +80,12 @@ export function initPlaces() {
                 if (state.marker) state.marker.setMap(null);
                 if (state.directionsRenderer) state.directionsRenderer.setDirections({routes: []});
 
+                const placesResults = root.results || [];
+                const placesStatus = root.status || 'ERROR';
+
                 if (placesStatus === 'OK' && placesResults.length > 0) {
                     mapContainer.classList.remove('hidden');
                     placesResultContainer.classList.remove('hidden');
-                    
-                    // Sort Results
-                    placesResults.sort((a, b) => {
-                        if (sortBy === 'distance') {
-                            const distA = getDistance(baseLat, baseLng, a.geometry.location.lat(), a.geometry.location.lng());
-                            const distB = getDistance(baseLat, baseLng, b.geometry.location.lat(), b.geometry.location.lng());
-                            return distA - distB;
-                        } else if (sortBy === 'rating') {
-                            const ratingA = a.rating || 0;
-                            const reviewsA = a.user_ratings_total || 0;
-                            const penaltyA = reviewsA === 0 ? 5 : (10 / (reviewsA + 1));
-                            const scoreA = ratingA - penaltyA;
-
-                            const ratingB = b.rating || 0;
-                            const reviewsB = b.user_ratings_total || 0;
-                            const penaltyB = reviewsB === 0 ? 5 : (10 / (reviewsB + 1));
-                            const scoreB = ratingB - penaltyB;
-
-                            return scoreB - scoreA; // descending
-                        }
-                        return 0;
-                    });
 
                     let html = `<div class="newspaper-article-box">
                                     <h3>Local ${placesCategory.options[placesCategory.selectedIndex].text} near ${address}</h3>
@@ -122,9 +101,13 @@ export function initPlaces() {
 
                     const newMarkers = [];
                     placesResults.forEach(place => {
+                        const mLat = place.geometry.location.lat;
+                        const mLng = place.geometry.location.lng;
+                        const pos = { lat: mLat, lng: mLng };
+
                         const m = new google.maps.Marker({
                             map: state.map,
-                            position: place.geometry.location,
+                            position: pos,
                             title: place.name
                         });
                         newMarkers.push(m);
@@ -155,6 +138,11 @@ export function initPlaces() {
                         </div>
                     `;
                 }
+            })
+            .catch(err => {
+                placesBtn.textContent = 'SEARCH DIRECTORY';
+                placesBtn.disabled = false;
+                alert("Error communicating with server.");
             });
         });
     });
@@ -167,16 +155,27 @@ export function initPlaces() {
         const placeId = row.getAttribute('data-place-id');
         if (!placeId) return;
 
-        const placesService = new google.maps.places.PlacesService(state.map);
-        placesService.getDetails({
-            placeId: placeId,
-            fields: ['name', 'rating', 'formatted_address', 'formatted_phone_number', 'opening_hours', 'reviews']
-        }, (place, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                showModal(place);
+        const lang = window.APP_LANG || 'en';
+
+        // Call our Java Backend for details
+        fetch('service', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'placeDetails',
+                data: { placeId: placeId, lang: lang }
+            })
+        })
+        .then(res => res.json())
+        .then(root => {
+            if (root.status === 'OK' && root.result) {
+                showModal(root.result);
             } else {
                 alert("Could not load details for this location.");
             }
+        })
+        .catch(err => {
+            alert("Error communicating with server.");
         });
     });
 

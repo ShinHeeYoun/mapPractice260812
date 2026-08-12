@@ -62,6 +62,34 @@ public class MapServiceServlet extends HttpServlet {
                 String googleResponse = googleMapsService.geocode(address);
                 out.print(googleResponse);
                 
+            } else if ("directions".equals(action)) {
+                JsonObject data = payload.getAsJsonObject("data");
+                String origin = data.get("origin").getAsString();
+                String destination = data.get("destination").getAsString();
+                String lang = data.has("lang") ? data.get("lang").getAsString() : "en";
+                
+                String googleResponse = googleMapsService.directions(origin, destination, lang);
+                out.print(googleResponse);
+
+            } else if ("places".equals(action)) {
+                JsonObject data = payload.getAsJsonObject("data");
+                double lat = data.get("lat").getAsDouble();
+                double lng = data.get("lng").getAsDouble();
+                String type = data.get("type").getAsString();
+                String sortBy = data.get("sortBy").getAsString();
+                String lang = data.has("lang") ? data.get("lang").getAsString() : "en";
+                
+                String googleResponse = googleMapsService.placesNearby(lat, lng, type, sortBy, lang);
+                out.print(googleResponse);
+
+            } else if ("placeDetails".equals(action)) {
+                JsonObject data = payload.getAsJsonObject("data");
+                String placeId = data.get("placeId").getAsString();
+                String lang = data.has("lang") ? data.get("lang").getAsString() : "en";
+                
+                String googleResponse = googleMapsService.placeDetails(placeId, lang);
+                out.print(googleResponse);
+
             } else {
                 out.print("{\"status\":\"error\", \"message\":\"Unknown action\"}");
             }

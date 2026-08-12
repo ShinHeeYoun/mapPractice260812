@@ -1,5 +1,7 @@
 import { state } from '../config/state.js';
 
+let customPolyline = null;
+
 export function initDirections() {
     const directionsBtn = document.getElementById('directions-btn');
     const originInput = document.getElementById('origin-input');
@@ -20,6 +22,7 @@ export function initDirections() {
     directionsBtn.addEventListener('click', () => {
         const origin = originInput.value.trim();
         const destination = destinationInput.value.trim();
+        const lang = window.APP_LANG || 'en';
 
         if (!origin || !destination) {
             alert("Please enter both origin and destination.");
@@ -31,31 +34,52 @@ export function initDirections() {
         directionsBtn.textContent = 'CALCULATING...';
         directionsBtn.disabled = true;
 
-        const directionsService = new google.maps.DirectionsService();
-        const request = {
-            origin: origin,
-            destination: destination,
-            travelMode: 'TRANSIT',
-            provideRouteAlternatives: false
-        };
-
-        directionsService.route(request, (result, status) => {
+        fetch('service', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'directions',
+                data: { origin, destination, lang }
+            })
+        })
+        .then(res => res.json())
+        .then(result => {
             directionsBtn.textContent = 'CALCULATE ROUTE';
             directionsBtn.disabled = false;
             if (lastFocused) lastFocused.focus();
             
             dirResultContainer.classList.remove('hidden');
             
-            if (status === 'OK') {
+            if (result.status === 'OK' && result.routes && result.routes.length > 0) {
                 if (state.marker) state.marker.setMap(null);
                 state.placeMarkers.forEach(m => m.setMap(null));
                 
-                state.directionsRenderer.setDirections(result);
+                // We no longer use DirectionsRenderer, clear it
+                if (state.directionsRenderer) state.directionsRenderer.setDirections({routes: []});
+                if (customPolyline) customPolyline.setMap(null);
+                
                 mapContainer.classList.remove('hidden');
 
                 const route = result.routes[0];
                 const leg = route.legs[0];
                 
+                // Draw manual polyline
+                const encodedPath = route.overview_polyline.points;
+                const path = google.maps.geometry.encoding.decodePath(encodedPath);
+                
+                customPolyline = new google.maps.Polyline({
+                    path: path,
+                    strokeColor: "#0000FF",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 5,
+                    map: state.map
+                });
+
+                // Auto fit bounds
+                const bounds = new google.maps.LatLngBounds();
+                path.forEach(p => bounds.extend(p));
+                state.map.fitBounds(bounds);
+
                 const distance = leg.distance.text;
                 const duration = leg.duration.text;
                 
@@ -82,8 +106,8 @@ export function initDirections() {
                     stepsHtml += `<div class="itinerary-inline" style="font-size:1.15rem; line-height:2.0; word-break: keep-all;">`;
                     
                     const stepItems = leg.steps.map((step) => {
-                        if (step.travel_mode === 'TRANSIT' && step.transit) {
-                            const t = step.transit;
+                        if (step.travel_mode === 'TRANSIT' && step.transit_details) {
+                            const t = step.transit_details;
                             const lineColor = t.line.color || '#333';
                             const textColor = t.line.text_color || '#fff';
                             const shortName = t.line.short_name || t.line.name;
@@ -92,7 +116,7 @@ export function initDirections() {
                             return `<span style="font-weight:bold; white-space:nowrap;">[${vehicle}]</span> <span class="transit-line-badge" style="background-color:${lineColor}; color:${textColor};">${shortName}</span> <span style="white-space:nowrap;">(${t.departure_stop.name} - ${t.arrival_stop.name})</span>`;
                         } else {
                             const tempDiv = document.createElement("div");
-                            tempDiv.innerHTML = step.instructions;
+                            tempDiv.innerHTML = step.html_instructions || "Walk";
                             return `<span style="font-weight:bold; white-space:nowrap;">[WALK]</span> <span style="white-space:nowrap;">${step.distance.text}</span>`;
                         }
                     });
@@ -104,7 +128,7 @@ export function initDirections() {
                     itineraryContainer.classList.remove('hidden');
                 }
 
-            } else if (status === 'ZERO_RESULTS') {
+            } else if (result.status === 'ZERO_RESULTS') {
                 dirResultContainer.innerHTML = `
                     <div class="newspaper-article-box">
                         <h3>Routing Failed</h3>
@@ -116,11 +140,16 @@ export function initDirections() {
                 dirResultContainer.innerHTML = `
                     <div class="newspaper-article-box">
                         <h3>Routing Failed</h3>
-                        <div class="result-row error-text">Directions request failed due to ${status}.</div>
+                        <div class="result-row error-text">Directions request failed due to ${result.status}.</div>
                     </div>
                 `;
                 if (itineraryContainer) itineraryContainer.classList.add('hidden');
             }
+        })
+        .catch(err => {
+            directionsBtn.textContent = 'CALCULATE ROUTE';
+            directionsBtn.disabled = false;
+            alert("Error communicating with server.");
         });
     });
 }
