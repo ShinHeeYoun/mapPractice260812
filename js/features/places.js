@@ -71,7 +71,7 @@ export function initPlaces() {
                     
                     let html = `<div class="newspaper-article-box">
                                     <h3>Local ${placesCategory.options[placesCategory.selectedIndex].text} near ${address}</h3>
-                                    <div class="places-grid">`;
+                                    <ul class="places-list" style="list-style-type: none; padding: 0; margin-top: 15px;">`;
 
                     const newMarkers = [];
                     placesResults.forEach(place => {
@@ -83,20 +83,23 @@ export function initPlaces() {
                         newMarkers.push(m);
 
                         const rating = place.rating ? `${place.rating} / 5.0 (${place.user_ratings_total} reviews)` : 'No ratings yet';
-                        const addr = place.vicinity || '';
+                        const addr = place.vicinity || 'Address N/A';
+                        
+                        let priceStr = 'Price Info N/A';
+                        if (place.price_level !== undefined) {
+                            priceStr = '₩'.repeat(place.price_level) || '₩'; // at least one ₩ for level 0
+                        }
                         
                         html += `
-                            <div class="place-card">
-                                <div class="place-name">${place.name}</div>
-                                <div class="place-rating">⭐ ${rating}</div>
-                                <div class="place-address">${addr}</div>
-                            </div>
+                            <li style="border-bottom: 1px dashed var(--border-color); padding: 10px 0; font-size: 1.15rem; word-break: keep-all;">
+                                <strong>${place.name}</strong> / ${addr} / ${priceStr} / ★ ${rating}
+                            </li>
                         `;
                     });
                     
                     setPlaceMarkers(newMarkers);
 
-                    html += `</div></div>`;
+                    html += `</ul></div>`;
                     placesResultContainer.innerHTML = html;
                     
                 } else {
