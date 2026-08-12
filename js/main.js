@@ -5,7 +5,6 @@ import { setupCustomAutocomplete } from './api/autocomplete.js';
 import { initGeocode } from './features/geocode.js';
 import { initDirections } from './features/directions.js';
 import { initPlaces } from './features/places.js';
-import { initPageTurnEffect } from './ui/pageTurn.js';
 
 // Expose initMap to the global window object so Google Maps API callback can find it
 window.initMap = function() {
@@ -56,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Initialize UI Components
     initTabs();
     initSpatialNavigation();
-    initPageTurnEffect();
 
     // 3. Initialize Feature Modules
     initGeocode();
