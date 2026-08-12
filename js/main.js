@@ -13,7 +13,15 @@ window.initMap = function() {
         zoom: 12,
         mapTypeControl: false,
         fullscreenControl: false,
-        streetViewControl: false
+        streetViewControl: false,
+        styles: [
+            {
+                stylers: [
+                    { saturation: -100 },
+                    { lightness: 15 }
+                ]
+            }
+        ]
     };
     
     setMap(new google.maps.Map(document.getElementById("map"), mapOptions));
