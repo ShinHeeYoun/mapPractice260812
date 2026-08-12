@@ -1,4 +1,4 @@
-import { i18n } from './i18n.js';
+import { i18n } from '../config/i18n.js';
 
 export function applyI18n() {
     // APP_LANG is set globally in index.jsp
