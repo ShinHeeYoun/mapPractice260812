@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>THE MAP PRACTICE TIMES</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="newspaper-header">
+        <h1>THE MAP PRACTICE TIMES</h1>
+        <div class="sub-header">
+            <span>Vol. 1</span>
+            <span>SEOUL, KOREA</span>
+            <span id="current-date"></span>
+            <span>Daily Edition</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <h2>CONTENTS</h2>
+            <ul id="nav-tabs">
+                <li><a href="#" data-target="section-intro" class="active">I. Introduction</a></li>
+                <li><a href="#" data-target="section-whack-a-mole">II. Whac-A-Mole (Test)</a></li>
+                <li><a href="#" data-target="section-map">III. Map Features (TBD)</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <!-- Intro Section -->
+            <section id="section-intro" class="tab-content active">
+                <h2 class="article-title">Welcome to The Times</h2>
+                <p class="article-text">
+                    This is a simple Java Web Application skeleton running on Tomcat 9. 
+                    It is designed using a classic black and white newspaper theme.
+                    Currently, we are preparing to integrate Google Maps API features.
+                </p>
+                <p class="article-text">
+                    In the meantime, please enjoy the Whac-A-Mole game from the left menu to test the Single Page Application (SPA) functionality.
+                </p>
+            </section>
+
+            <!-- Whac-A-Mole Section -->
+            <section id="section-whack-a-mole" class="tab-content">
+                <h2 class="article-title">NUMPAD WHAC-A-MOLE</h2>
+                <p class="article-text" style="column-count: 1;">Use your Numpad keys (1-9) to catch the mole! The mole will appear in one of the 9 cells. The layout below matches your number pad.</p>
+                
+                <div class="game-info">
+                    <span class="score-board">SCORE: <span id="score">0</span></span>
+                    <button id="start-game-btn" class="newspaper-btn">START GAME</button>
+                </div>
+
+                <div class="grid-container">
+                    <!-- Numpad layout: 7 8 9 on top, 1 2 3 on bottom -->
+                    <div class="grid-cell" data-key="7">7</div>
+                    <div class="grid-cell" data-key="8">8</div>
+                    <div class="grid-cell" data-key="9">9</div>
+                    <div class="grid-cell" data-key="4">4</div>
+                    <div class="grid-cell" data-key="5">5</div>
+                    <div class="grid-cell" data-key="6">6</div>
+                    <div class="grid-cell" data-key="1">1</div>
+                    <div class="grid-cell" data-key="2">2</div>
+                    <div class="grid-cell" data-key="3">3</div>
+                </div>
+            </section>
+
+            <!-- Map Section -->
+            <section id="section-map" class="tab-content">
+                <h2 class="article-title">MAP SERVICES</h2>
+                <p class="article-text">Google Maps API integration is under construction...</p>
+                <div class="placeholder-box">
+                    [ MAP WILL BE DISPLAYED HERE ]
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

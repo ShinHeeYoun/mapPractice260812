@@ -1,0 +1,185 @@
+/* CSS Reset and Variables */
+:root {
+    --bg-color: #f4f4f0; /* Off-white newspaper paper */
+    --text-color: #1a1a1a;
+    --border-color: #222;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: "Times New Roman", Times, serif; /* Classic newspaper font */
+    line-height: 1.6;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+.newspaper-header {
+    text-align: center;
+    border-bottom: 4px solid var(--border-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.newspaper-header h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.sub-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Layout container */
+.container {
+    display: flex;
+    gap: 30px;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    flex: 0 0 250px;
+    border-right: 2px solid var(--border-color);
+    padding-right: 20px;
+}
+
+.sidebar h2 {
+    font-size: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+}
+
+#nav-tabs {
+    list-style: none;
+}
+
+#nav-tabs li {
+    margin-bottom: 10px;
+}
+
+#nav-tabs a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: block;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--border-color);
+    transition: background-color 0.2s;
+}
+
+#nav-tabs a:hover, #nav-tabs a.active {
+    background-color: #e0e0d8;
+    padding-left: 5px;
+}
+
+/* Main Content */
+.content-area {
+    flex: 1;
+}
+
+.tab-content {
+    display: none; /* Hidden by default */
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.article-title {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.article-text {
+    font-size: 1.1rem;
+    text-align: justify;
+    margin-bottom: 15px;
+    column-count: 2; /* Newspaper columns */
+    column-gap: 20px;
+}
+
+/* Game Specific */
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.newspaper-btn {
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    padding: 5px 15px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.newspaper-btn:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 5px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.grid-cell {
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #999;
+    transition: background-color 0.1s;
+}
+
+.grid-cell.mole {
+    background-color: var(--border-color);
+    color: var(--bg-color);
+}
+
+.grid-cell.hit {
+    background-color: #666; /* Temporary flash for hit */
+}
+
+.placeholder-box {
+    border: 2px dashed var(--border-color);
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #666;
+}
