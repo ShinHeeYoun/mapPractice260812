@@ -59,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (geocodeBtn && addressInput) {
         
-        // Support Enter key
-        addressInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+        // Support Enter key (Fix for Korean IME delay)
+        addressInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.isComposing) {
                 e.preventDefault(); 
                 geocodeBtn.click();
             }
