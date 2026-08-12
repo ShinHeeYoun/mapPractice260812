@@ -95,4 +95,87 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // 4. Map API Logic
+    const geocodeBtn = document.getElementById('geocode-btn');
+    const addressInput = document.getElementById('address-input');
+    const resultContainer = document.getElementById('map-result-container');
+
+    if (geocodeBtn) {
+        geocodeBtn.addEventListener('click', () => {
+            const address = addressInput.value.trim();
+            if (!address) {
+                alert("Please enter a location first.");
+                return;
+            }
+
+            geocodeBtn.textContent = 'DISPATCHING...';
+            geocodeBtn.disabled = true;
+
+            const payload = {
+                action: "geocode",
+                data: {
+                    address: address
+                }
+            };
+
+            fetch('service', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                geocodeBtn.textContent = 'DISPATCH TELEGRAM';
+                geocodeBtn.disabled = false;
+                resultContainer.classList.remove('hidden');
+
+                if (data.status === 'OK' && data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    const lat = result.geometry.location.lat;
+                    const lng = result.geometry.location.lng;
+                    const formattedAddress = result.formatted_address;
+
+                    resultContainer.innerHTML = `
+                        <div class="newspaper-article-box">
+                            <h3>Telegraph Received</h3>
+                            <div class="result-row"><span class="result-label">Location Found:</span> ${formattedAddress}</div>
+                            <div class="result-row"><span class="result-label">Latitude:</span> ${lat}</div>
+                            <div class="result-row"><span class="result-label">Longitude:</span> ${lng}</div>
+                            <p class="article-text" style="margin-top: 15px;">The coordinates for the requested location have been successfully retrieved via the Telegraphic Mapping Service.</p>
+                        </div>
+                    `;
+                } else if (data.status === 'error') {
+                    resultContainer.innerHTML = `
+                        <div class="newspaper-article-box">
+                            <h3>Communication Error</h3>
+                            <div class="result-row error-text">System Error: ${data.message}</div>
+                        </div>
+                    `;
+                } else {
+                    const statusReason = data.error_message || data.status;
+                    resultContainer.innerHTML = `
+                        <div class="newspaper-article-box">
+                            <h3>Telegram Failed</h3>
+                            <div class="result-row error-text">Could not resolve location. Reason: ${statusReason}</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                geocodeBtn.textContent = 'DISPATCH TELEGRAM';
+                geocodeBtn.disabled = false;
+                resultContainer.classList.remove('hidden');
+                resultContainer.innerHTML = `
+                    <div class="newspaper-article-box">
+                        <h3>Critical System Failure</h3>
+                        <div class="result-row error-text">Failed to connect to the telegraph office.</div>
+                        <div class="result-row">${err.message}</div>
+                    </div>
+                `;
+            });
+        });
+    }
 });

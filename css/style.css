@@ -183,3 +183,70 @@ body {
     font-weight: bold;
     color: #666;
 }
+
+/* Map Form & Result */
+.hidden {
+    display: none !important;
+}
+
+.map-form-container {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.newspaper-input {
+    flex: 1;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--text-color);
+}
+
+.newspaper-input:focus {
+    outline: none;
+    background-color: #e0e0d8;
+}
+
+.map-result-container {
+    margin-top: 20px;
+}
+
+.newspaper-article-box {
+    border: 3px double var(--border-color);
+    padding: 20px;
+    background-color: #fafaf8;
+}
+
+.newspaper-article-box h3 {
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+}
+
+.result-row {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.result-label {
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-right: 10px;
+}
+
+.error-text {
+    color: #900;
+    font-weight: bold;
+}

@@ -69,9 +69,16 @@
             <!-- Map Section -->
             <section id="section-map" class="tab-content">
                 <h2 class="article-title">MAP SERVICES</h2>
-                <p class="article-text">Google Maps API integration is under construction...</p>
-                <div class="placeholder-box">
-                    [ MAP WILL BE DISPLAYED HERE ]
+                <div class="map-form-container">
+                    <p class="article-text">Please enter a location to receive its geographic coordinates directly from Google's Telegraphic Mapping Service (API).</p>
+                    <div class="input-group">
+                        <label for="address-input"><strong>Target Location:</strong></label>
+                        <input type="text" id="address-input" class="newspaper-input" placeholder="e.g. Seoul Tower">
+                        <button id="geocode-btn" class="newspaper-btn">DISPATCH TELEGRAM</button>
+                    </div>
+                </div>
+                <div id="map-result-container" class="map-result-container hidden">
+                    <!-- Results will be injected here -->
                 </div>
             </section>
         </main>
