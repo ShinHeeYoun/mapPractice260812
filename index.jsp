@@ -151,6 +151,8 @@
             <!-- Global Itinerary Container (Placed below map as requested) -->
             <div id="itinerary-container" class="map-result-container hidden"></div>
             
+            <!-- Folded Corner for Page Turning -->
+            <div id="page-fold" title="Drag left to turn page"></div>
         </main>
     </div>
 

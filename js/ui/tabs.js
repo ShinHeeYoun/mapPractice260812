@@ -45,3 +45,13 @@ export function initTabs() {
         });
     });
 }
+
+export function switchToNextTab() {
+    const tabs = Array.from(document.querySelectorAll('#nav-tabs a'));
+    const activeIndex = tabs.findIndex(tab => tab.classList.contains('active'));
+    
+    if (activeIndex >= 0) {
+        const nextIndex = (activeIndex + 1) % tabs.length;
+        tabs[nextIndex].click(); // Simulate a user click to trigger the full logic
+    }
+}
