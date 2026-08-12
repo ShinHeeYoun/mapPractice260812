@@ -35,9 +35,36 @@ function initMap() {
     const originInput = document.getElementById('origin-input');
     const destinationInput = document.getElementById('destination-input');
     
+    function attachPreserveInputLogic(inputEl) {
+        let typedValue = '';
+        
+        // Save the actual user typing
+        inputEl.addEventListener('input', (e) => {
+            typedValue = e.target.value;
+        });
+
+        // Restore the typed value when the user clicks the input box again
+        inputEl.addEventListener('click', (e) => {
+            if (typedValue) {
+                e.target.value = typedValue;
+            }
+        });
+
+        // Prevent Google Autocomplete from changing the input text when using arrow keys
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                setTimeout(() => {
+                    inputEl.value = typedValue;
+                }, 10);
+            }
+        });
+    }
+
     if (originInput && destinationInput) {
         new google.maps.places.Autocomplete(originInput);
         new google.maps.places.Autocomplete(destinationInput);
+        attachPreserveInputLogic(originInput);
+        attachPreserveInputLogic(destinationInput);
     }
 }
 

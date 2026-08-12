@@ -18,7 +18,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>THE MAP PRACTICE TIMES</title>
+    <title>Signatural API NEWS</title>
     <link rel="stylesheet" href="css/style.css">
     <% if (!apiKey.isEmpty()) { %>
     <script src="https://maps.googleapis.com/maps/api/js?key=<%=apiKey%>&callback=initMap&libraries=places" async defer></script>
@@ -28,7 +28,7 @@
 </head>
 <body>
     <header class="newspaper-header">
-        <h1>THE MAP PRACTICE TIMES</h1>
+        <h1>Signatural API NEWS</h1>
         <div class="sub-header">
             <span>Vol. 1</span>
             <span>SEOUL, KOREA</span>
@@ -57,7 +57,7 @@
         <main class="content-area">
             <!-- Intro Section -->
             <section id="section-intro" class="tab-content active">
-                <h2 class="article-title">Welcome to The Times</h2>
+                <h2 class="article-title">Welcome to Signatural API NEWS</h2>
                 <p class="article-text">
                     This is a simple Java Web Application skeleton running on Tomcat 9. 
                     It is designed using a classic black and white newspaper theme.
