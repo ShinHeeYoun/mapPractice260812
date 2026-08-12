@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const shortName = t.line.short_name || t.line.name;
                                 const vehicle = t.line.vehicle ? t.line.vehicle.name : 'Transit';
                                 
-                                return `<span style="font-weight:bold; white-space:nowrap;">[${vehicle}]</span> <span class="transit-line-badge" style="background-color:${lineColor}; color:${textColor};">${shortName}</span> <span style="white-space:nowrap;">(${t.departure_stop.name} &rarr; ${t.arrival_stop.name})</span>`;
+                                return `<span style="font-weight:bold; white-space:nowrap;">[${vehicle}]</span> <span class="transit-line-badge" style="background-color:${lineColor}; color:${textColor};">${shortName}</span> <span style="white-space:nowrap;">(${t.departure_stop.name} - ${t.arrival_stop.name})</span>`;
                             } else {
                                 // Strip HTML tags from step.instructions to keep it clean in an inline format
                                 const tempDiv = document.createElement("div");
