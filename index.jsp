@@ -105,6 +105,9 @@
             <div id="map-container" class="map-container hidden">
                 <div id="map"></div>
             </div>
+
+            <!-- Global Itinerary Container (Placed below map as requested) -->
+            <div id="itinerary-container" class="map-result-container hidden"></div>
             
         </main>
     </div>

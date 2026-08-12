@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapContainer = document.getElementById('map-container');
     const dirResultContainer = document.getElementById('directions-result-container');
     const resultContainer = document.getElementById('map-result-container');
+    const itineraryContainer = document.getElementById('itinerary-container');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
@@ -192,12 +193,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetId === 'section-intro') {
                 mapContainer.classList.add('hidden');
+                if (itineraryContainer) itineraryContainer.classList.add('hidden');
             } else if (targetId === 'section-map-geocode' && !resultContainer.classList.contains('hidden')) {
                 mapContainer.classList.remove('hidden');
+                if (itineraryContainer) itineraryContainer.classList.add('hidden');
             } else if (targetId === 'section-map-directions' && !dirResultContainer.classList.contains('hidden')) {
                 mapContainer.classList.remove('hidden');
+                if (itineraryContainer && itineraryContainer.innerHTML.trim() !== '') itineraryContainer.classList.remove('hidden');
             } else {
                 mapContainer.classList.add('hidden');
+                if (itineraryContainer) itineraryContainer.classList.add('hidden');
             }
         });
     });
@@ -360,6 +365,53 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="result-row"><span class="result-label">Est. Cost:</span> ${costText}</div>
                         </div>
                     `;
+
+                    // Generate Step-by-Step Itinerary
+                    if (itineraryContainer && leg.steps && leg.steps.length > 0) {
+                        let stepsHtml = `<div class="newspaper-article-box" style="margin-top:0;">`;
+                        stepsHtml += `<h3>Step-by-step Itinerary</h3>`;
+                        
+                        leg.steps.forEach((step, index) => {
+                            let icon = '';
+                            let detailsHtml = '';
+                            
+                            if (step.travel_mode === 'TRANSIT' && step.transit) {
+                                icon = 'Transit';
+                                const t = step.transit;
+                                const lineColor = t.line.color || '#333';
+                                const textColor = t.line.text_color || '#fff';
+                                const shortName = t.line.short_name || t.line.name;
+                                const vehicle = t.line.vehicle ? t.line.vehicle.name : 'Transit';
+                                
+                                stepsHtml += `
+                                <div class="itinerary-step">
+                                    <div class="itinerary-icon">[ ${vehicle} ]</div>
+                                    <div class="itinerary-instruction">
+                                        <span class="transit-line-badge" style="background-color:${lineColor}; color:${textColor};">${shortName}</span>
+                                        ${step.instructions}
+                                        <div class="itinerary-details">
+                                            From <strong>${t.departure_stop.name}</strong> to <strong>${t.arrival_stop.name}</strong> (${t.num_stops} stops)
+                                        </div>
+                                    </div>
+                                </div>`;
+                            } else {
+                                icon = 'Walk';
+                                stepsHtml += `
+                                <div class="itinerary-step">
+                                    <div class="itinerary-icon">[ ${icon} ]</div>
+                                    <div class="itinerary-instruction">
+                                        ${step.instructions}
+                                        <div class="itinerary-details">${step.distance.text} (${step.duration.text})</div>
+                                    </div>
+                                </div>`;
+                            }
+                        });
+                        
+                        stepsHtml += `</div>`;
+                        itineraryContainer.innerHTML = stepsHtml;
+                        itineraryContainer.classList.remove('hidden');
+                    }
+
                 } else if (status === 'ZERO_RESULTS') {
                     dirResultContainer.innerHTML = `
                         <div class="newspaper-article-box">
@@ -367,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="result-row error-text">No transit route found between these locations. Try specifying more detail.</div>
                         </div>
                     `;
+                    if (itineraryContainer) itineraryContainer.classList.add('hidden');
                 } else {
                     dirResultContainer.innerHTML = `
                         <div class="newspaper-article-box">
