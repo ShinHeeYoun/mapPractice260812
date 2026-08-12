@@ -37,10 +37,12 @@ function initMap() {
     const originInput = document.getElementById('origin-input');
     const destinationInput = document.getElementById('destination-input');
     const addressInput = document.getElementById('address-input');
+    const placesInput = document.getElementById('places-input');
     
     if (originInput) setupCustomAutocomplete(originInput);
     if (destinationInput) setupCustomAutocomplete(destinationInput);
     if (addressInput) setupCustomAutocomplete(addressInput);
+    if (placesInput) setupCustomAutocomplete(placesInput);
 }
 
 function setupCustomAutocomplete(inputEl) {
@@ -178,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dirResultContainer = document.getElementById('directions-result-container');
     const resultContainer = document.getElementById('map-result-container');
     const itineraryContainer = document.getElementById('itinerary-container');
+    const placesResultContainer = document.getElementById('places-result-container');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
@@ -194,15 +197,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetId === 'section-intro') {
                 mapContainer.classList.add('hidden');
                 if (itineraryContainer) itineraryContainer.classList.add('hidden');
+                if (placesResultContainer) placesResultContainer.classList.add('hidden');
             } else if (targetId === 'section-map-geocode' && !resultContainer.classList.contains('hidden')) {
                 mapContainer.classList.remove('hidden');
                 if (itineraryContainer) itineraryContainer.classList.add('hidden');
+                if (placesResultContainer) placesResultContainer.classList.add('hidden');
             } else if (targetId === 'section-map-directions' && !dirResultContainer.classList.contains('hidden')) {
                 mapContainer.classList.remove('hidden');
                 if (itineraryContainer && itineraryContainer.innerHTML.trim() !== '') itineraryContainer.classList.remove('hidden');
+                if (placesResultContainer) placesResultContainer.classList.add('hidden');
+            } else if (targetId === 'section-map-places' && !placesResultContainer.classList.contains('hidden')) {
+                mapContainer.classList.remove('hidden');
+                if (itineraryContainer) itineraryContainer.classList.add('hidden');
             } else {
                 mapContainer.classList.add('hidden');
                 if (itineraryContainer) itineraryContainer.classList.add('hidden');
+                if (placesResultContainer) placesResultContainer.classList.add('hidden');
             }
         });
     });
@@ -418,7 +428,122 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Global 2D Spatial Navigation
+    // 5. Local Directory (Places) Logic
+    const placesBtn = document.getElementById('places-btn');
+    const placesInput = document.getElementById('places-input');
+    const placesCategory = document.getElementById('places-category');
+    let placeMarkers = [];
+
+    if (placesBtn) {
+        placesBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                placesBtn.click();
+            }
+        });
+
+        placesBtn.addEventListener('click', () => {
+            const address = placesInput.value.trim();
+            const type = placesCategory.value;
+
+            if (!address) {
+                alert("Please enter a base location first.");
+                return;
+            }
+
+            const lastFocused = document.activeElement;
+
+            placesBtn.textContent = 'SEARCHING...';
+            placesBtn.disabled = true;
+
+            // Step 1: Geocode the address to get center coordinates
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status !== 'OK' || !results[0]) {
+                    placesBtn.textContent = 'SEARCH DIRECTORY';
+                    placesBtn.disabled = false;
+                    if (lastFocused) lastFocused.focus();
+                    alert("Could not locate the specified address.");
+                    return;
+                }
+
+                const location = results[0].geometry.location;
+
+                // Center map
+                if (map) {
+                    map.setCenter(location);
+                    map.setZoom(15);
+                }
+
+                // Step 2: Search for places nearby
+                const request = {
+                    location: location,
+                    radius: '1000', // 1km radius
+                    type: [type]
+                };
+
+                const placesService = new google.maps.places.PlacesService(map);
+                placesService.nearbySearch(request, (placesResults, placesStatus) => {
+                    placesBtn.textContent = 'SEARCH DIRECTORY';
+                    placesBtn.disabled = false;
+                    if (lastFocused) lastFocused.focus();
+
+                    // Clear old markers
+                    placeMarkers.forEach(m => m.setMap(null));
+                    placeMarkers = [];
+                    
+                    // Clear current single marker if any
+                    if (marker) marker.setMap(null);
+                    if (directionsRenderer) directionsRenderer.setDirections({routes: []});
+
+                    if (placesStatus === 'OK' && placesResults.length > 0) {
+                        mapContainer.classList.remove('hidden');
+                        placesResultContainer.classList.remove('hidden');
+                        
+                        let html = `<div class="newspaper-article-box">
+                                        <h3>Local ${placesCategory.options[placesCategory.selectedIndex].text} near ${address}</h3>
+                                        <div class="places-grid">`;
+
+                        placesResults.forEach(place => {
+                            // Add marker
+                            const m = new google.maps.Marker({
+                                map: map,
+                                position: place.geometry.location,
+                                title: place.name
+                            });
+                            placeMarkers.push(m);
+
+                            // Build card
+                            const rating = place.rating ? `${place.rating} / 5.0 (${place.user_ratings_total} reviews)` : 'No ratings yet';
+                            const addr = place.vicinity || '';
+                            
+                            html += `
+                                <div class="place-card">
+                                    <div class="place-name">${place.name}</div>
+                                    <div class="place-rating">⭐ ${rating}</div>
+                                    <div class="place-address">${addr}</div>
+                                </div>
+                            `;
+                        });
+
+                        html += `</div></div>`;
+                        placesResultContainer.innerHTML = html;
+                        
+                    } else {
+                        placesResultContainer.classList.remove('hidden');
+                        placesResultContainer.innerHTML = `
+                            <div class="newspaper-article-box">
+                                <h3>Directory Search Failed</h3>
+                                <div class="result-row error-text">No results found for this category nearby.</div>
+                            </div>
+                        `;
+                    }
+                });
+            });
+        });
+    }
+
+    // 6. Global 2D Spatial Navigation
     document.addEventListener('keydown', (e) => {
         const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
         if (!keys.includes(e.key)) return;

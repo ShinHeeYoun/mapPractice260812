@@ -48,6 +48,7 @@
                     <ul class="sub-nav">
                         <li><a href="#" data-target="section-map-geocode">A. Geocoding</a></li>
                         <li><a href="#" data-target="section-map-directions">B. Directions</a></li>
+                        <li><a href="#" data-target="section-map-places">C. Local Directory</a></li>
                     </ul>
                 </li>
             </ul>
@@ -100,11 +101,39 @@
                 </div>
                 <div id="directions-result-container" class="map-result-container hidden"></div>
             </section>
+
+            <!-- Local Directory (Places) Section -->
+            <section id="section-map-places" class="tab-content">
+                <h2 class="article-title">LOCAL DIRECTORY</h2>
+                <div class="map-form-container">
+                    <p class="article-text" style="column-count: 1;">Search the classifieds for local businesses and points of interest near your designated location.</p>
+                    <div class="input-group">
+                        <label for="places-input"><strong>Base Location:</strong></label>
+                        <input type="text" id="places-input" class="newspaper-input" placeholder="e.g. Gangnam Station">
+                    </div>
+                    <div class="input-group">
+                        <label for="places-category"><strong>Category:</strong></label>
+                        <select id="places-category" class="newspaper-input" style="cursor: pointer;">
+                            <option value="restaurant">Restaurants (Diners & Eateries)</option>
+                            <option value="cafe">Cafes (Coffee Houses)</option>
+                            <option value="bakery">Bakeries</option>
+                            <option value="hospital">Hospitals & Clinics</option>
+                            <option value="park">Parks & Recreation</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="justify-content: flex-end; margin-top: 15px;">
+                        <button id="places-btn" class="newspaper-btn">SEARCH DIRECTORY</button>
+                    </div>
+                </div>
+            </section>
             
-            <!-- Global Map Container (Shared across Geocode and Directions) -->
+            <!-- Global Map Container (Shared across Geocode, Directions, Places) -->
             <div id="map-container" class="map-container hidden">
                 <div id="map"></div>
             </div>
+
+            <!-- Places List Result Container -->
+            <div id="places-result-container" class="map-result-container hidden"></div>
 
             <!-- Global Itinerary Container (Placed below map as requested) -->
             <div id="itinerary-container" class="map-result-container hidden"></div>
