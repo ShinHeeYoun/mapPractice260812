@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 public class MapServiceServlet extends HttpServlet {
     
     // TODO: Replace with actual API KEY
-    private static final String API_KEY = "YOUR_API_KEY_HERE";
+    private static final String API_KEY = "AIzaSyDA5SUTtBplEtvarp-kCtqedKycXQqwjOk";
     private static final Gson gson = new Gson();
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
