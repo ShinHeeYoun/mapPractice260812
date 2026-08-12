@@ -49,8 +49,8 @@ export function initPlaces() {
 
             const request = {
                 location: location,
-                radius: '1000',
-                type: [type]
+                radius: 1000,
+                type: type
             };
 
             const placesService = new google.maps.places.PlacesService(state.map);
