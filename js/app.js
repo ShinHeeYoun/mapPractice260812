@@ -370,44 +370,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (itineraryContainer && leg.steps && leg.steps.length > 0) {
                         let stepsHtml = `<div class="newspaper-article-box" style="margin-top:0;">`;
                         stepsHtml += `<h3>Step-by-step Itinerary</h3>`;
+                        stepsHtml += `<div class="itinerary-inline" style="font-size:1.15rem; line-height:2.0; word-break: keep-all;">`;
                         
-                        leg.steps.forEach((step, index) => {
-                            let icon = '';
-                            let detailsHtml = '';
-                            
+                        const stepItems = leg.steps.map((step) => {
                             if (step.travel_mode === 'TRANSIT' && step.transit) {
-                                icon = 'Transit';
                                 const t = step.transit;
                                 const lineColor = t.line.color || '#333';
                                 const textColor = t.line.text_color || '#fff';
                                 const shortName = t.line.short_name || t.line.name;
                                 const vehicle = t.line.vehicle ? t.line.vehicle.name : 'Transit';
                                 
-                                stepsHtml += `
-                                <div class="itinerary-step">
-                                    <div class="itinerary-icon">[ ${vehicle} ]</div>
-                                    <div class="itinerary-instruction">
-                                        <span class="transit-line-badge" style="background-color:${lineColor}; color:${textColor};">${shortName}</span>
-                                        ${step.instructions}
-                                        <div class="itinerary-details">
-                                            From <strong>${t.departure_stop.name}</strong> to <strong>${t.arrival_stop.name}</strong> (${t.num_stops} stops)
-                                        </div>
-                                    </div>
-                                </div>`;
+                                return `<span style="font-weight:bold; white-space:nowrap;">[${vehicle}]</span> <span class="transit-line-badge" style="background-color:${lineColor}; color:${textColor};">${shortName}</span> <span style="white-space:nowrap;">(${t.departure_stop.name} &rarr; ${t.arrival_stop.name})</span>`;
                             } else {
-                                icon = 'Walk';
-                                stepsHtml += `
-                                <div class="itinerary-step">
-                                    <div class="itinerary-icon">[ ${icon} ]</div>
-                                    <div class="itinerary-instruction">
-                                        ${step.instructions}
-                                        <div class="itinerary-details">${step.distance.text} (${step.duration.text})</div>
-                                    </div>
-                                </div>`;
+                                // Strip HTML tags from step.instructions to keep it clean in an inline format
+                                const tempDiv = document.createElement("div");
+                                tempDiv.innerHTML = step.instructions;
+                                const cleanInstruction = tempDiv.textContent || tempDiv.innerText || "";
+                                
+                                return `<span style="font-weight:bold; white-space:nowrap;">[WALK]</span> <span style="white-space:nowrap;">${step.distance.text}</span>`;
                             }
                         });
                         
-                        stepsHtml += `</div>`;
+                        stepsHtml += stepItems.join(' <strong style="font-size:1.3rem; margin:0 8px; vertical-align:-2px;">&rarr;</strong> ');
+                        stepsHtml += `</div></div>`;
+                        
                         itineraryContainer.innerHTML = stepsHtml;
                         itineraryContainer.classList.remove('hidden');
                     }
