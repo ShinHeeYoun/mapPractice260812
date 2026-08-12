@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
@@ -16,13 +18,30 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 public class MapServiceServlet extends HttpServlet {
     
-    // TODO: Replace with actual API KEY
-    private static final String API_KEY = "AIzaSyDA5SUTtBplEtvarp-kCtqedKycXQqwjOk";
+    private String apiKey = "";
     private static final Gson gson = new Gson();
     private static final HttpClient httpClient = HttpClient.newHttpClient();
+
+    @Override
+    public void init() throws ServletException {
+        Properties props = new Properties();
+        String configPath = getServletContext().getRealPath("/WEB-INF/config.properties");
+        if (configPath != null) {
+            File configFile = new File(configPath);
+            if (configFile.exists()) {
+                try (FileInputStream fis = new FileInputStream(configFile)) {
+                    props.load(fis);
+                    apiKey = props.getProperty("google.maps.api.key", "");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -30,6 +49,12 @@ public class MapServiceServlet extends HttpServlet {
         response.setContentType("application/json; charset=UTF-8");
         
         PrintWriter out = response.getWriter();
+        
+        if (apiKey == null || apiKey.trim().isEmpty() || apiKey.equals("YOUR_NEW_API_KEY_HERE")) {
+            out.print("{\"status\":\"error\", \"message\":\"API Key is not configured correctly on the server.\"}");
+            out.flush();
+            return;
+        }
         
         try {
             // Read JSON payload
@@ -56,7 +81,7 @@ public class MapServiceServlet extends HttpServlet {
                 
                 // Call Google Maps API
                 String encodedAddress = URLEncoder.encode(address, StandardCharsets.UTF_8.toString());
-                String url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + encodedAddress + "&key=" + API_KEY;
+                String url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + encodedAddress + "&key=" + apiKey;
                 
                 HttpRequest googleRequest = HttpRequest.newBuilder()
                         .uri(URI.create(url))
