@@ -91,6 +91,12 @@ body {
     padding-left: 5px;
 }
 
+#nav-tabs a:focus {
+    background-color: #d0d0c8;
+    outline: 2px dashed var(--border-color);
+    outline-offset: 2px;
+}
+
 /* Main Content */
 .content-area {
     flex: 1;
@@ -165,7 +171,8 @@ body {
 }
 
 .newspaper-input:focus {
-    outline: none;
+    outline: 2px solid var(--border-color);
+    outline-offset: -1px;
     background-color: #e0e0d8;
 }
 

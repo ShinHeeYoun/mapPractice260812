@@ -35,29 +35,9 @@ function initMap() {
     const originInput = document.getElementById('origin-input');
     const destinationInput = document.getElementById('destination-input');
     
-    function attachPreserveInputLogic(inputEl) {
-        let typedValue = '';
-        
-        // Save the actual user typing
-        inputEl.addEventListener('input', (e) => {
-            typedValue = e.target.value;
-        });
-
-        // Prevent Google Autocomplete from changing the input text when using arrow keys
-        inputEl.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                setTimeout(() => {
-                    inputEl.value = typedValue;
-                }, 10);
-            }
-        });
-    }
-
     if (originInput && destinationInput) {
         new google.maps.places.Autocomplete(originInput);
         new google.maps.places.Autocomplete(destinationInput);
-        attachPreserveInputLogic(originInput);
-        attachPreserveInputLogic(destinationInput);
     }
 }
 
@@ -201,26 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const directionsBtn = document.getElementById('directions-btn');
 
     if (directionsBtn) {
-        
-        // Custom ArrowDown navigation (only if dropdown is not open)
-        const isDropdownOpen = () => {
-            return Array.from(document.querySelectorAll('.pac-container')).some(el => el.offsetParent !== null);
-        };
-        
-        originInput.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowDown' && !isDropdownOpen()) {
-                e.preventDefault();
-                destinationInput.focus();
-            }
-        });
-        
-        destinationInput.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowDown' && !isDropdownOpen()) {
-                e.preventDefault();
-                directionsBtn.focus();
-            }
-        });
-
         // Button execution on Enter (when focused)
         directionsBtn.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -299,4 +259,86 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // 5. Global 2D Spatial Navigation
+    document.addEventListener('keydown', (e) => {
+        const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+        if (!keys.includes(e.key)) return;
+
+        // Exception 1: If Google Maps Autocomplete dropdown is open, let it handle ArrowUp/Down
+        const isDropdownOpen = Array.from(document.querySelectorAll('.pac-container')).some(el => el.offsetParent !== null);
+        if (isDropdownOpen && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return;
+
+        const currentEl = document.activeElement;
+        
+        // Exception 2: If inside a text input, allow Left/Right for text cursor editing
+        if (currentEl && currentEl.tagName === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+
+        // Gather all focusable candidates (a, input, button) that are visible
+        const candidates = Array.from(document.querySelectorAll('a, input, button')).filter(el => {
+            return el.offsetParent !== null && !el.disabled; // Must be visible and not disabled
+        });
+
+        if (candidates.length === 0) return;
+
+        if (!currentEl || !candidates.includes(currentEl)) {
+            // If no valid element focused, let default browser behavior happen
+            return;
+        }
+
+        const currentRect = currentEl.getBoundingClientRect();
+        let bestCandidate = null;
+        let minDistance = Infinity;
+
+        candidates.forEach(candidate => {
+            if (candidate === currentEl) return;
+            const rect = candidate.getBoundingClientRect();
+            
+            const curCx = currentRect.left + currentRect.width / 2;
+            const curCy = currentRect.top + currentRect.height / 2;
+            const candCx = rect.left + rect.width / 2;
+            const candCy = rect.top + rect.height / 2;
+
+            let isDirectionMatch = false;
+            // A bit of tolerance (+/- 10px) to allow slightly off-axis elements
+            if (e.key === 'ArrowUp' && candCy < curCy - 10) isDirectionMatch = true;
+            if (e.key === 'ArrowDown' && candCy > curCy + 10) isDirectionMatch = true;
+            if (e.key === 'ArrowLeft' && candCx < curCx - 10) isDirectionMatch = true;
+            if (e.key === 'ArrowRight' && candCx > curCx + 10) isDirectionMatch = true;
+
+            if (isDirectionMatch) {
+                const dist = Math.sqrt(Math.pow(curCx - candCx, 2) + Math.pow(curCy - candCy, 2));
+                
+                // Weight distance to prefer elements that are more "straight" in the pressed direction
+                let penalty = 0;
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    penalty = Math.abs(curCx - candCx) * 3; // Penalize horizontal offset heavily
+                } else {
+                    penalty = Math.abs(curCy - candCy) * 3; // Penalize vertical offset heavily
+                }
+                
+                const weightedDist = dist + penalty;
+
+                if (weightedDist < minDistance) {
+                    minDistance = weightedDist;
+                    bestCandidate = candidate;
+                }
+            }
+        });
+
+        if (bestCandidate) {
+            e.preventDefault();
+            bestCandidate.focus();
+        }
+    });
+
+    // Allow Enter key to click tabs
+    document.querySelectorAll('#nav-tabs a').forEach(tab => {
+        tab.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                tab.click();
+            }
+        });
+    });
 });
