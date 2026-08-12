@@ -46,9 +46,9 @@
                 <li>
                     <span class="nav-category">II. Map</span>
                     <ul class="sub-nav">
-                        <li><a href="#" data-target="section-map-geocode">A. Geocoding</a></li>
-                        <li><a href="#" data-target="section-map-directions">B. Directions</a></li>
-                        <li><a href="#" data-target="section-map-places">C. Local Directory</a></li>
+                        <li><a href="#" data-target="section-map-geocode">A. Place</a></li>
+                        <li><a href="#" data-target="section-map-directions">B. Route Find</a></li>
+                        <li><a href="#" data-target="section-map-places">C. Restaurants</a></li>
                     </ul>
                 </li>
             </ul>
@@ -70,9 +70,11 @@
 
             <!-- Geocoding Section -->
             <section id="section-map-geocode" class="tab-content">
-                <h2 class="article-title">GEOCODING SERVICE</h2>
+                <h2 class="article-title">PLACE</h2>
                 <div class="map-form-container">
-                    <p class="article-text" style="column-count: 1;">Enter a location to receive its geographic coordinates.</p>
+                    <p class="article-text" style="column-count: 1;">
+                        This page utilizes the Google Maps Geocoding API to convert physical addresses into geographic coordinates. When a user submits an address, a JSON payload is sent to our Java backend servlet via an asynchronous fetch request. The Java backend then securely constructs an HTTP GET request containing our private API key and forwards it to Google's servers. Upon success, Google returns a comprehensive JSON response containing the exact latitude, longitude, and formatted address, which our frontend then uses to center the map and drop a precise marker.
+                    </p>
                     <div class="input-group">
                         <label for="address-input"><strong>Target Location:</strong></label>
                         <input type="text" id="address-input" class="newspaper-input" placeholder="e.g. Seoul Tower">
@@ -84,9 +86,11 @@
 
             <!-- Directions Section -->
             <section id="section-map-directions" class="tab-content">
-                <h2 class="article-title">DIRECTIONS SERVICE</h2>
+                <h2 class="article-title">ROUTE FIND</h2>
                 <div class="map-form-container">
-                    <p class="article-text" style="column-count: 1;">Enter your origin and destination to calculate the best transit route, distance, and estimated costs. (Autocomplete is enabled)</p>
+                    <p class="article-text" style="column-count: 1;">
+                        This section employs the Google Maps Directions API via the Maps JavaScript SDK to calculate optimal transit routes. When you provide an origin and destination, the browser directly sends a routing request to Google specifying 'TRANSIT' as the preferred travel mode. Google processes this request and returns a detailed JSON object containing route legs, total distance, estimated duration, and step-by-step transit instructions. Our application then uses a DirectionsRenderer to automatically draw the polyline path on the map and parses the nested steps to display a continuous text itinerary.
+                    </p>
                     <div class="input-group">
                         <label for="origin-input"><strong>Origin:</strong></label>
                         <input type="text" id="origin-input" class="newspaper-input" placeholder="e.g. Gangnam Station">
@@ -104,9 +108,11 @@
 
             <!-- Local Directory (Places) Section -->
             <section id="section-map-places" class="tab-content">
-                <h2 class="article-title">LOCAL DIRECTORY</h2>
+                <h2 class="article-title">RESTAURANTS</h2>
                 <div class="map-form-container">
-                    <p class="article-text" style="column-count: 1;">Search the classifieds for local businesses and points of interest near your designated location.</p>
+                    <p class="article-text" style="column-count: 1;">
+                        This directory leverages the Google Maps Places API to discover local businesses around a specified center point. First, it uses the Geocoder API to convert your string-based base location into precise latitudinal and longitudinal coordinates. Next, it sends a nearbySearch request to the Places service, specifying a 1000-meter radius and the selected establishment type. The API returns an array of Place objects containing names, vicinities, user ratings, and price levels, which we subsequently sort using a custom Haversine distance algorithm and a rating penalty before displaying them in a tabular format.
+                    </p>
                     <div class="input-group">
                         <label for="places-input"><strong>Base Location:</strong></label>
                         <input type="text" id="places-input" class="newspaper-input" placeholder="e.g. Gangnam Station">
