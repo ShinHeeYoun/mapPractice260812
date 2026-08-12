@@ -116,19 +116,21 @@ function setupCustomAutocomplete(inputEl) {
             if (dropdownContainer && selectedIndex >= 0 && selectedIndex < predictions.length) {
                 inputEl.value = predictions[selectedIndex].description;
                 closeDropdown();
-            } else if (!dropdownContainer || predictions.length === 0) {
+            } else {
                 const val = inputEl.value.trim();
                 if (!val) return;
                 
                 autocompleteService.getPlacePredictions({ input: val }, (results, status) => {
-                    if (status === 'OK' && results) {
+                    if (status === 'OK' && results && results.length > 0) {
                         predictions = results;
-                        renderDropdown();
                     } else {
-                        predictions = [];
-                        closeDropdown();
-                        alert("No results found.");
+                        // Fallback mock prediction if Google API returns ZERO_RESULTS for a highly specific query
+                        predictions = [{
+                            description: val,
+                            structured_formatting: { main_text: val, secondary_text: "Selected Location" }
+                        }];
                     }
+                    renderDropdown();
                 });
             }
             return;
@@ -380,8 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentEl = document.activeElement;
         
-        // Exception 2: If inside a text input, allow Left/Right for text cursor editing
-        if (currentEl && currentEl.tagName === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+        // Exception 2: If inside a text input, allow Left/Right for text cursor editing UNLESS at boundaries
+        if (currentEl && currentEl.tagName === 'INPUT') {
+            if (e.key === 'ArrowLeft' && currentEl.selectionStart > 0) return;
+            if (e.key === 'ArrowRight' && currentEl.selectionEnd < currentEl.value.length) return;
+        }
 
         // Gather all focusable candidates (a, input, button) that are visible
         const candidates = Array.from(document.querySelectorAll('a, input, button')).filter(el => {
