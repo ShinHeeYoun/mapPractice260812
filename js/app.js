@@ -2,6 +2,7 @@ let map;
 let marker;
 let directionsService;
 let directionsRenderer;
+let autocompleteService;
 
 // Callback for Google Maps JS API
 function initMap() {
@@ -31,14 +32,134 @@ function initMap() {
         suppressMarkers: false
     });
 
-    // Autocomplete Setup
+    // Custom Autocomplete Setup
+    autocompleteService = new google.maps.places.AutocompleteService();
     const originInput = document.getElementById('origin-input');
     const destinationInput = document.getElementById('destination-input');
+    const addressInput = document.getElementById('address-input');
     
-    if (originInput && destinationInput) {
-        new google.maps.places.Autocomplete(originInput);
-        new google.maps.places.Autocomplete(destinationInput);
-    }
+    if (originInput) setupCustomAutocomplete(originInput);
+    if (destinationInput) setupCustomAutocomplete(destinationInput);
+    if (addressInput) setupCustomAutocomplete(addressInput);
+}
+
+function setupCustomAutocomplete(inputEl) {
+    let dropdownContainer = null;
+    let predictions = [];
+    let selectedIndex = -1;
+
+    const closeDropdown = () => {
+        if (dropdownContainer) {
+            dropdownContainer.remove();
+            dropdownContainer = null;
+        }
+        selectedIndex = -1;
+        predictions = [];
+    };
+
+    const renderDropdown = () => {
+        closeDropdown();
+        if (predictions.length === 0) return;
+
+        dropdownContainer = document.createElement('ul');
+        dropdownContainer.className = 'custom-ac-container';
+        
+        const rect = inputEl.getBoundingClientRect();
+        dropdownContainer.style.top = (rect.bottom + window.scrollY) + 'px';
+        dropdownContainer.style.left = (rect.left + window.scrollX) + 'px';
+        dropdownContainer.style.width = rect.width + 'px';
+
+        predictions.forEach((pred, index) => {
+            const li = document.createElement('li');
+            li.className = 'custom-ac-item';
+            
+            const mainText = pred.structured_formatting ? pred.structured_formatting.main_text : pred.description;
+            const subText = pred.structured_formatting ? pred.structured_formatting.secondary_text : '';
+            
+            li.innerHTML = `<span class="custom-ac-query">${mainText}</span> ${subText}`;
+
+            li.addEventListener('click', () => {
+                inputEl.value = pred.description;
+                closeDropdown();
+                inputEl.focus();
+            });
+            dropdownContainer.appendChild(li);
+        });
+
+        document.body.appendChild(dropdownContainer);
+    };
+
+    const updateSelection = () => {
+        if (!dropdownContainer) return;
+        const items = dropdownContainer.querySelectorAll('.custom-ac-item');
+        items.forEach((item, idx) => {
+            if (idx === selectedIndex) {
+                item.classList.add('selected');
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+    };
+
+    inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeDropdown();
+            e.stopPropagation();
+            return;
+        }
+        
+        if (e.key === 'Enter' && !e.isComposing) {
+            e.preventDefault();
+            e.stopPropagation(); // Block other enter listeners
+            
+            if (dropdownContainer && selectedIndex >= 0 && selectedIndex < predictions.length) {
+                inputEl.value = predictions[selectedIndex].description;
+                closeDropdown();
+            } else if (!dropdownContainer || predictions.length === 0) {
+                const val = inputEl.value.trim();
+                if (!val) return;
+                
+                autocompleteService.getPlacePredictions({ input: val }, (results, status) => {
+                    if (status === 'OK' && results) {
+                        predictions = results;
+                        renderDropdown();
+                    } else {
+                        predictions = [];
+                        closeDropdown();
+                        alert("No results found.");
+                    }
+                });
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            if (dropdownContainer) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectedIndex = (selectedIndex + 1) % predictions.length;
+                updateSelection();
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowUp') {
+            if (dropdownContainer) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectedIndex = (selectedIndex - 1 + predictions.length) % predictions.length;
+                updateSelection();
+            }
+            return;
+        }
+    }, true); // use capture phase to intercept early if needed
+
+    document.addEventListener('click', (e) => {
+        if (inputEl !== e.target && dropdownContainer && !dropdownContainer.contains(e.target)) {
+            closeDropdown();
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetId = tab.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
 
-            // Hide map container when switching tabs (unless results exist)
             if (targetId === 'section-intro') {
                 mapContainer.classList.add('hidden');
             } else if (targetId === 'section-map-geocode' && !resultContainer.classList.contains('hidden')) {
@@ -86,14 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addressInput = document.getElementById('address-input');
 
     if (geocodeBtn && addressInput) {
-        
-        addressInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.isComposing) {
-                e.preventDefault(); 
-                geocodeBtn.click();
-            }
-        });
-
+        // Removed Enter key auto-submit for geocode to prevent conflict with custom autocomplete
         geocodeBtn.addEventListener('click', () => {
             const address = addressInput.value.trim();
             if (!address) {
@@ -140,10 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
 
                     if (map && marker) {
-                        // Clear directions if any
                         if(directionsRenderer) directionsRenderer.setDirections({routes: []});
-                        
-                        marker.setMap(map); // Ensure marker is visible
+                        marker.setMap(map);
                         const newPos = { lat: lat, lng: lng };
                         map.setCenter(newPos);
                         map.setZoom(15);
@@ -181,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const directionsBtn = document.getElementById('directions-btn');
 
     if (directionsBtn) {
-        // Button execution on Enter (when focused)
         directionsBtn.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -204,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const request = {
                 origin: origin,
                 destination: destination,
-                travelMode: 'TRANSIT', // Prefer transit for costs
+                travelMode: 'TRANSIT',
             };
 
             directionsService.route(request, (result, status) => {
@@ -214,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dirResultContainer.classList.remove('hidden');
                 
                 if (status === 'OK') {
-                    // Hide geocode marker
                     if (marker) marker.setMap(null);
                     
                     directionsRenderer.setDirections(result);
@@ -265,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
         if (!keys.includes(e.key)) return;
 
-        // Exception 1: If Google Maps Autocomplete dropdown is open, let it handle ArrowUp/Down
-        const isDropdownOpen = Array.from(document.querySelectorAll('.pac-container')).some(el => el.offsetParent !== null);
+        // Exception 1: If Custom Autocomplete dropdown is open, let it handle ArrowUp/Down
+        const isDropdownOpen = Array.from(document.querySelectorAll('.custom-ac-container')).some(el => el.offsetParent !== null);
         if (isDropdownOpen && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return;
 
         const currentEl = document.activeElement;
@@ -276,13 +385,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Gather all focusable candidates (a, input, button) that are visible
         const candidates = Array.from(document.querySelectorAll('a, input, button')).filter(el => {
-            return el.offsetParent !== null && !el.disabled; // Must be visible and not disabled
+            return el.offsetParent !== null && !el.disabled;
         });
 
         if (candidates.length === 0) return;
 
         if (!currentEl || !candidates.includes(currentEl)) {
-            // If no valid element focused, let default browser behavior happen
             return;
         }
 
@@ -300,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const candCy = rect.top + rect.height / 2;
 
             let isDirectionMatch = false;
-            // A bit of tolerance (+/- 10px) to allow slightly off-axis elements
             if (e.key === 'ArrowUp' && candCy < curCy - 10) isDirectionMatch = true;
             if (e.key === 'ArrowDown' && candCy > curCy + 10) isDirectionMatch = true;
             if (e.key === 'ArrowLeft' && candCx < curCx - 10) isDirectionMatch = true;
@@ -309,12 +416,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isDirectionMatch) {
                 const dist = Math.sqrt(Math.pow(curCx - candCx, 2) + Math.pow(curCy - candCy, 2));
                 
-                // Weight distance to prefer elements that are more "straight" in the pressed direction
                 let penalty = 0;
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    penalty = Math.abs(curCx - candCx) * 3; // Penalize horizontal offset heavily
+                    penalty = Math.abs(curCx - candCx) * 3;
                 } else {
-                    penalty = Math.abs(curCy - candCy) * 3; // Penalize vertical offset heavily
+                    penalty = Math.abs(curCy - candCy) * 3;
                 }
                 
                 const weightedDist = dist + penalty;
@@ -332,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Allow Enter key to click tabs
     document.querySelectorAll('#nav-tabs a').forEach(tab => {
         tab.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {

@@ -242,23 +242,34 @@ body {
     margin-bottom: 5px;
 }
 
-/* Autocomplete overriding to match newspaper theme */
-.pac-container {
+/* Custom Autocomplete overriding to match newspaper theme */
+.custom-ac-container {
+    position: absolute;
+    z-index: 1000;
     background-color: var(--bg-color);
     font-family: "Times New Roman", Times, serif;
     border: 2px solid var(--border-color);
     box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    max-height: 250px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.pac-item {
+.custom-ac-item {
     padding: 8px;
     font-size: 1.1rem;
     border-top: 1px dashed var(--border-color);
     color: var(--text-color);
+    cursor: pointer;
 }
-.pac-item:hover, .pac-item-selected {
+.custom-ac-item:first-child {
+    border-top: none;
+}
+.custom-ac-item:hover, .custom-ac-item.selected {
     background-color: #e0e0d8;
 }
-.pac-item-query {
+.custom-ac-query {
     font-size: 1.2rem;
     font-weight: bold;
     color: #000;
