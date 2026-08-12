@@ -1,9 +1,22 @@
 import { state, setPlaceMarkers } from '../config/state.js';
 
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    return R * c;
+}
+
 export function initPlaces() {
     const placesBtn = document.getElementById('places-btn');
     const placesInput = document.getElementById('places-input');
     const placesCategory = document.getElementById('places-category');
+    const placesSort = document.getElementById('places-sort');
     const placesResultContainer = document.getElementById('places-result-container');
     const mapContainer = document.getElementById('map-container');
 
@@ -19,6 +32,7 @@ export function initPlaces() {
     placesBtn.addEventListener('click', () => {
         const address = placesInput.value.trim();
         const type = placesCategory.value;
+        const sortBy = placesSort.value;
 
         if (!address) {
             alert("Please enter a base location first.");
@@ -41,6 +55,8 @@ export function initPlaces() {
             }
 
             const location = results[0].geometry.location;
+            const baseLat = location.lat();
+            const baseLng = location.lng();
 
             if (state.map) {
                 state.map.setCenter(location);
@@ -69,9 +85,39 @@ export function initPlaces() {
                     mapContainer.classList.remove('hidden');
                     placesResultContainer.classList.remove('hidden');
                     
+                    // Sort Results
+                    placesResults.sort((a, b) => {
+                        if (sortBy === 'distance') {
+                            const distA = getDistance(baseLat, baseLng, a.geometry.location.lat(), a.geometry.location.lng());
+                            const distB = getDistance(baseLat, baseLng, b.geometry.location.lat(), b.geometry.location.lng());
+                            return distA - distB;
+                        } else if (sortBy === 'rating') {
+                            const ratingA = a.rating || 0;
+                            const reviewsA = a.user_ratings_total || 0;
+                            const penaltyA = reviewsA === 0 ? 5 : (10 / (reviewsA + 1));
+                            const scoreA = ratingA - penaltyA;
+
+                            const ratingB = b.rating || 0;
+                            const reviewsB = b.user_ratings_total || 0;
+                            const penaltyB = reviewsB === 0 ? 5 : (10 / (reviewsB + 1));
+                            const scoreB = ratingB - penaltyB;
+
+                            return scoreB - scoreA; // descending
+                        }
+                        return 0;
+                    });
+
                     let html = `<div class="newspaper-article-box">
                                     <h3>Local ${placesCategory.options[placesCategory.selectedIndex].text} near ${address}</h3>
-                                    <ul class="places-list" style="list-style-type: none; padding: 0; margin-top: 15px;">`;
+                                    <table class="newspaper-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 30%;">Name</th>
+                                                <th style="width: 50%;">Address</th>
+                                                <th style="width: 20%;">Rating</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`;
 
                     const newMarkers = [];
                     placesResults.forEach(place => {
@@ -82,24 +128,21 @@ export function initPlaces() {
                         });
                         newMarkers.push(m);
 
-                        const rating = place.rating ? `${place.rating} / 5.0 (${place.user_ratings_total} reviews)` : 'No ratings yet';
+                        const rating = place.rating ? `${place.rating} (${place.user_ratings_total})` : 'N/A';
                         const addr = place.vicinity || 'Address N/A';
                         
-                        let priceStr = 'Price Info N/A';
-                        if (place.price_level !== undefined) {
-                            priceStr = '₩'.repeat(place.price_level) || '₩'; // at least one ₩ for level 0
-                        }
-                        
                         html += `
-                            <li style="border-bottom: 1px dashed var(--border-color); padding: 10px 0; font-size: 1.15rem; word-break: keep-all;">
-                                <strong>${place.name}</strong> / ${addr} / ${priceStr} / ★ ${rating}
-                            </li>
+                            <tr>
+                                <td><strong>${place.name}</strong></td>
+                                <td>${addr}</td>
+                                <td>★ ${rating}</td>
+                            </tr>
                         `;
                     });
                     
                     setPlaceMarkers(newMarkers);
 
-                    html += `</ul></div>`;
+                    html += `</tbody></table></div>`;
                     placesResultContainer.innerHTML = html;
                     
                 } else {

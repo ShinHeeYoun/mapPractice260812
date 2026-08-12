@@ -121,6 +121,13 @@
                             <option value="park">Parks & Recreation</option>
                         </select>
                     </div>
+                    <div class="input-group">
+                        <label for="places-sort"><strong>Sort By:</strong></label>
+                        <select id="places-sort" class="newspaper-input" style="cursor: pointer;">
+                            <option value="distance">Distance (Nearest First)</option>
+                            <option value="rating">Rating (Highest First)</option>
+                        </select>
+                    </div>
                     <div class="input-group" style="justify-content: flex-end; margin-top: 15px;">
                         <button id="places-btn" class="newspaper-btn">SEARCH DIRECTORY</button>
                     </div>
