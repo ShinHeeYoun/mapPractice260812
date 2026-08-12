@@ -19,25 +19,28 @@ export function initTabs() {
             const targetId = tab.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
 
-            if (targetId === 'section-intro') {
-                mapContainer.classList.add('hidden');
-                if (itineraryContainer) itineraryContainer.classList.add('hidden');
-                if (placesResultContainer) placesResultContainer.classList.add('hidden');
-            } else if (targetId === 'section-map-geocode' && !resultContainer.classList.contains('hidden')) {
-                mapContainer.classList.remove('hidden');
-                if (itineraryContainer) itineraryContainer.classList.add('hidden');
-                if (placesResultContainer) placesResultContainer.classList.add('hidden');
-            } else if (targetId === 'section-map-directions' && !dirResultContainer.classList.contains('hidden')) {
-                mapContainer.classList.remove('hidden');
-                if (itineraryContainer && itineraryContainer.innerHTML.trim() !== '') itineraryContainer.classList.remove('hidden');
-                if (placesResultContainer) placesResultContainer.classList.add('hidden');
-            } else if (targetId === 'section-map-places' && !placesResultContainer.classList.contains('hidden')) {
-                mapContainer.classList.remove('hidden');
-                if (itineraryContainer) itineraryContainer.classList.add('hidden');
-            } else {
-                mapContainer.classList.add('hidden');
-                if (itineraryContainer) itineraryContainer.classList.add('hidden');
-                if (placesResultContainer) placesResultContainer.classList.add('hidden');
+            // Hide all shared containers first
+            mapContainer.classList.add('hidden');
+            if (itineraryContainer) itineraryContainer.classList.add('hidden');
+            if (placesResultContainer) placesResultContainer.classList.add('hidden');
+
+            // Selectively restore based on target tab and content presence
+            if (targetId === 'section-map-geocode') {
+                if (resultContainer && resultContainer.innerHTML.trim() !== '') {
+                    mapContainer.classList.remove('hidden');
+                }
+            } else if (targetId === 'section-map-directions') {
+                if (dirResultContainer && dirResultContainer.innerHTML.trim() !== '') {
+                    mapContainer.classList.remove('hidden');
+                    if (itineraryContainer && itineraryContainer.innerHTML.trim() !== '') {
+                        itineraryContainer.classList.remove('hidden');
+                    }
+                }
+            } else if (targetId === 'section-map-places') {
+                if (placesResultContainer && placesResultContainer.innerHTML.trim() !== '') {
+                    mapContainer.classList.remove('hidden');
+                    placesResultContainer.classList.remove('hidden');
+                }
             }
         });
     });
