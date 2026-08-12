@@ -43,13 +43,6 @@ function initMap() {
             typedValue = e.target.value;
         });
 
-        // Restore the typed value when the user clicks the input box again
-        inputEl.addEventListener('click', (e) => {
-            if (typedValue) {
-                e.target.value = typedValue;
-            }
-        });
-
         // Prevent Google Autocomplete from changing the input text when using arrow keys
         inputEl.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -208,6 +201,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const directionsBtn = document.getElementById('directions-btn');
 
     if (directionsBtn) {
+        
+        // Custom ArrowDown navigation (only if dropdown is not open)
+        const isDropdownOpen = () => {
+            return Array.from(document.querySelectorAll('.pac-container')).some(el => el.offsetParent !== null);
+        };
+        
+        originInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' && !isDropdownOpen()) {
+                e.preventDefault();
+                destinationInput.focus();
+            }
+        });
+        
+        destinationInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' && !isDropdownOpen()) {
+                e.preventDefault();
+                directionsBtn.focus();
+            }
+        });
+
+        // Button execution on Enter (when focused)
+        directionsBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                directionsBtn.click();
+            }
+        });
+
         directionsBtn.addEventListener('click', () => {
             const origin = originInput.value.trim();
             const destination = destinationInput.value.trim();

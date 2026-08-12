@@ -130,9 +130,10 @@ body {
     cursor: pointer;
 }
 
-.newspaper-btn:hover {
+.newspaper-btn:hover, .newspaper-btn:focus {
     background-color: var(--text-color);
     color: var(--bg-color);
+    outline: none;
 }
 
 /* Map Form & Result */
