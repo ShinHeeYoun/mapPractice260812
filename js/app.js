@@ -1,3 +1,30 @@
+let map;
+let marker;
+
+// Callback for Google Maps JS API
+function initMap() {
+    // Default location (Seoul)
+    const initialLocation = { lat: 37.5665, lng: 126.9780 };
+    
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: initialLocation,
+        zoom: 13,
+        // Using a greyscale style to match the newspaper theme
+        styles: [
+            {
+                featureType: "all",
+                elementType: "all",
+                stylers: [{ saturation: -100 }]
+            }
+        ]
+    });
+
+    marker = new google.maps.Marker({
+        map: map,
+        position: initialLocation,
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Set Header Date
     const dateSpan = document.getElementById('current-date');
@@ -14,94 +41,32 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Remove active from all tabs and contents
             tabs.forEach(t => t.classList.remove('active'));
             contents.forEach(c => c.classList.remove('active'));
 
-            // Add active to clicked tab
             tab.classList.add('active');
 
-            // Show target content
             const targetId = tab.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
         });
     });
 
-    // 3. Whac-A-Mole Logic
-    let score = 0;
-    let gameInterval = null;
-    let activeMoleKey = null;
-    let isPlaying = false;
-
-    const scoreDisplay = document.getElementById('score');
-    const startBtn = document.getElementById('start-game-btn');
-    const cells = document.querySelectorAll('.grid-cell');
-
-    // Numpad to KeyCode mapping
-    const validKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
-    startBtn.addEventListener('click', () => {
-        if (isPlaying) return;
-        
-        isPlaying = true;
-        score = 0;
-        scoreDisplay.textContent = score;
-        startBtn.textContent = 'PLAYING...';
-        
-        if (gameInterval) clearInterval(gameInterval);
-
-        gameInterval = setInterval(popUpMole, 800);
-
-        setTimeout(() => {
-            clearInterval(gameInterval);
-            isPlaying = false;
-            removeMole();
-            startBtn.textContent = 'START GAME';
-            alert(`Game Over! The Times reports your final score: ${score}`);
-        }, 30000); // 30 seconds
-    });
-
-    function popUpMole() {
-        removeMole();
-        
-        const randomIdx = Math.floor(Math.random() * validKeys.length);
-        activeMoleKey = validKeys[randomIdx];
-
-        const targetCell = document.querySelector(`.grid-cell[data-key="${activeMoleKey}"]`);
-        if (targetCell) {
-            targetCell.classList.add('mole');
-        }
-    }
-
-    function removeMole() {
-        cells.forEach(cell => cell.classList.remove('mole', 'hit'));
-        activeMoleKey = null;
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (!isPlaying) return;
-
-        const pressedKey = e.key; 
-
-        if (validKeys.includes(pressedKey)) {
-            if (pressedKey === activeMoleKey) {
-                // Hit!
-                score++;
-                scoreDisplay.textContent = score;
-                const hitCell = document.querySelector(`.grid-cell[data-key="${pressedKey}"]`);
-                hitCell.classList.remove('mole');
-                hitCell.classList.add('hit');
-                activeMoleKey = null; // Prevent double scoring
-            }
-        }
-    });
-
-    // 4. Map API Logic
+    // 3. Map API Logic
     const geocodeBtn = document.getElementById('geocode-btn');
     const addressInput = document.getElementById('address-input');
     const resultContainer = document.getElementById('map-result-container');
+    const mapContainer = document.getElementById('map-container');
 
-    if (geocodeBtn) {
+    if (geocodeBtn && addressInput) {
+        
+        // Support Enter key
+        addressInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                geocodeBtn.click();
+            }
+        });
+
         geocodeBtn.addEventListener('click', () => {
             const address = addressInput.value.trim();
             if (!address) {
@@ -144,9 +109,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="result-row"><span class="result-label">Location Found:</span> ${formattedAddress}</div>
                             <div class="result-row"><span class="result-label">Latitude:</span> ${lat}</div>
                             <div class="result-row"><span class="result-label">Longitude:</span> ${lng}</div>
-                            <p class="article-text" style="margin-top: 15px;">The coordinates for the requested location have been successfully retrieved via the Telegraphic Mapping Service.</p>
                         </div>
                     `;
+
+                    // Update visual map
+                    if (map && marker) {
+                        const newPos = { lat: lat, lng: lng };
+                        map.setCenter(newPos);
+                        map.setZoom(15);
+                        marker.setPosition(newPos);
+                        mapContainer.classList.remove('hidden');
+                    }
+                    
                 } else if (data.status === 'error') {
                     resultContainer.innerHTML = `
                         <div class="newspaper-article-box">

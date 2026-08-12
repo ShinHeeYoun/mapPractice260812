@@ -1,9 +1,30 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.Properties, java.io.FileInputStream, java.io.File" %>
+<%
+    Properties props = new Properties();
+    String apiKey = "";
+    String configPath = application.getRealPath("/WEB-INF/config.properties");
+    if (configPath != null) {
+        File configFile = new File(configPath);
+        if (configFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(configFile)) {
+                props.load(fis);
+                apiKey = props.getProperty("google.maps.api.key", "");
+            } catch (Exception e) {}
+        }
+    }
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>THE MAP PRACTICE TIMES</title>
     <link rel="stylesheet" href="css/style.css">
+    <% if (!apiKey.isEmpty()) { %>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%=apiKey%>&callback=initMap" async defer></script>
+    <% } else { %>
+    <script>console.error("Google Maps API Key not found in config.properties");</script>
+    <% } %>
 </head>
 <body>
     <header class="newspaper-header">
@@ -22,8 +43,7 @@
             <h2>CONTENTS</h2>
             <ul id="nav-tabs">
                 <li><a href="#" data-target="section-intro" class="active">I. Introduction</a></li>
-                <li><a href="#" data-target="section-whack-a-mole">II. Whac-A-Mole (Test)</a></li>
-                <li><a href="#" data-target="section-map">III. Map Features (TBD)</a></li>
+                <li><a href="#" data-target="section-map">II. Map</a></li>
             </ul>
         </nav>
 
@@ -35,42 +55,18 @@
                 <p class="article-text">
                     This is a simple Java Web Application skeleton running on Tomcat 9. 
                     It is designed using a classic black and white newspaper theme.
-                    Currently, we are preparing to integrate Google Maps API features.
+                    Currently, we have integrated the Google Maps API for geocoding and visual mapping.
                 </p>
-                <p class="article-text">
-                    In the meantime, please enjoy the Whac-A-Mole game from the left menu to test the Single Page Application (SPA) functionality.
+                <p class="article-text" style="column-count: 1;">
+                    Please navigate to the Map section to use the Telegraphic Mapping Service.
                 </p>
-            </section>
-
-            <!-- Whac-A-Mole Section -->
-            <section id="section-whack-a-mole" class="tab-content">
-                <h2 class="article-title">NUMPAD WHAC-A-MOLE</h2>
-                <p class="article-text" style="column-count: 1;">Use your Numpad keys (1-9) to catch the mole! The mole will appear in one of the 9 cells. The layout below matches your number pad.</p>
-                
-                <div class="game-info">
-                    <span class="score-board">SCORE: <span id="score">0</span></span>
-                    <button id="start-game-btn" class="newspaper-btn">START GAME</button>
-                </div>
-
-                <div class="grid-container">
-                    <!-- Numpad layout: 7 8 9 on top, 1 2 3 on bottom -->
-                    <div class="grid-cell" data-key="7">7</div>
-                    <div class="grid-cell" data-key="8">8</div>
-                    <div class="grid-cell" data-key="9">9</div>
-                    <div class="grid-cell" data-key="4">4</div>
-                    <div class="grid-cell" data-key="5">5</div>
-                    <div class="grid-cell" data-key="6">6</div>
-                    <div class="grid-cell" data-key="1">1</div>
-                    <div class="grid-cell" data-key="2">2</div>
-                    <div class="grid-cell" data-key="3">3</div>
-                </div>
             </section>
 
             <!-- Map Section -->
             <section id="section-map" class="tab-content">
                 <h2 class="article-title">MAP SERVICES</h2>
                 <div class="map-form-container">
-                    <p class="article-text">Please enter a location to receive its geographic coordinates directly from Google's Telegraphic Mapping Service (API).</p>
+                    <p class="article-text" style="column-count: 1;">Please enter a location to receive its geographic coordinates directly from Google's Telegraphic Mapping Service (API). Press 'Enter' or click the dispatch button.</p>
                     <div class="input-group">
                         <label for="address-input"><strong>Target Location:</strong></label>
                         <input type="text" id="address-input" class="newspaper-input" placeholder="e.g. Seoul Tower">
@@ -79,6 +75,9 @@
                 </div>
                 <div id="map-result-container" class="map-result-container hidden">
                     <!-- Results will be injected here -->
+                </div>
+                <div id="map-container" class="map-container hidden">
+                    <div id="map"></div>
                 </div>
             </section>
         </main>
