@@ -1,4 +1,5 @@
 import { state, setPlaceMarkers } from '../config/state.js';
+import { i18n } from '../config/i18n.js';
 
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // km
@@ -132,7 +133,7 @@ export function initPlaces() {
                         const addr = place.vicinity || 'Address N/A';
                         
                         html += `
-                            <tr>
+                            <tr class="place-row" data-place-id="${place.place_id}">
                                 <td><strong>${place.name}</strong></td>
                                 <td>${addr}</td>
                                 <td>★ ${rating}</td>
@@ -157,4 +158,81 @@ export function initPlaces() {
             });
         });
     });
+
+    // Modal Event Delegation
+    placesResultContainer.addEventListener('click', (e) => {
+        const row = e.target.closest('.place-row');
+        if (!row) return;
+
+        const placeId = row.getAttribute('data-place-id');
+        if (!placeId) return;
+
+        const placesService = new google.maps.places.PlacesService(state.map);
+        placesService.getDetails({
+            placeId: placeId,
+            fields: ['name', 'rating', 'formatted_address', 'formatted_phone_number', 'opening_hours', 'reviews']
+        }, (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                showModal(place);
+            } else {
+                alert("Could not load details for this location.");
+            }
+        });
+    });
+
+    // Modal Close Logic
+    const backdrop = document.getElementById('modal-backdrop');
+    const modal = document.getElementById('newspaper-modal');
+    const closeBtn = document.getElementById('modal-close-btn');
+    
+    function closeModal() {
+        backdrop.classList.add('hidden');
+        modal.classList.add('hidden');
+    }
+
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+}
+
+function showModal(place) {
+    const backdrop = document.getElementById('modal-backdrop');
+    const modal = document.getElementById('newspaper-modal');
+    const content = document.getElementById('modal-content');
+    
+    if (!backdrop || !modal || !content) return;
+
+    const lang = window.APP_LANG || 'en';
+    const dict = i18n[lang];
+
+    let reviewsHtml = '';
+    if (place.reviews && place.reviews.length > 0) {
+        const topReviews = place.reviews.slice(0, 3);
+        reviewsHtml = topReviews.map(r => `
+            <div class="review-box">
+                <strong>${r.author_name} (★ ${r.rating})</strong>
+                <p style="font-size: 0.95rem; margin-top: 5px;">"${r.text}"</p>
+            </div>
+        `).join('');
+    } else {
+        reviewsHtml = `<p>${dict.no_reviews || 'No reviews available.'}</p>`;
+    }
+
+    const phone = place.formatted_phone_number || 'N/A';
+    const hours = place.opening_hours && place.opening_hours.weekday_text 
+        ? `<ul style="list-style:none; padding:0;">${place.opening_hours.weekday_text.map(h => `<li>${h}</li>`).join('')}</ul>`
+        : 'N/A';
+
+    content.innerHTML = `
+        <h3>${place.name} <span style="font-size: 1rem; color: #555;">(★ ${place.rating || 'N/A'})</span></h3>
+        <p><strong>${dict.lbl_address || 'ADDRESS'}:</strong><br/> ${place.formatted_address}</p>
+        <p><strong>${dict.lbl_phone || 'PHONE'}:</strong><br/> ${phone}</p>
+        <p><strong>${dict.lbl_hours || 'HOURS'}:</strong><br/> ${hours}</p>
+        <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <strong style="text-transform: uppercase;">${dict.lbl_recent_reviews || 'Recent Reviews'}</strong>
+            ${reviewsHtml}
+        </div>
+    `;
+
+    backdrop.classList.remove('hidden');
+    modal.classList.remove('hidden');
 }

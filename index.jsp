@@ -162,6 +162,15 @@
             <!-- Global Itinerary Container (Placed below map as requested) -->
             <div id="itinerary-container" class="map-result-container hidden"></div>
             
+            <!-- Newspaper Detail Modal -->
+            <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+            <div id="newspaper-modal" class="newspaper-modal hidden">
+                <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+                <div id="modal-content" class="modal-content">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+            </div>
+            
         </main>
     </div>
 

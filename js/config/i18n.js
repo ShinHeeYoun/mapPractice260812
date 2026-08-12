@@ -42,7 +42,13 @@ export const i18n = {
         opt_rating: "Rating (Highest First)",
         
         ph_seoul_tower: "e.g. Seoul Tower",
-        ph_gangnam: "e.g. Gangnam Station"
+        ph_gangnam: "e.g. Gangnam Station",
+        
+        lbl_address: "ADDRESS",
+        lbl_phone: "PHONE",
+        lbl_hours: "HOURS",
+        lbl_recent_reviews: "Recent Reviews",
+        no_reviews: "No reviews available."
     },
     ko: {
         vol: "제 1호",
@@ -87,6 +93,12 @@ export const i18n = {
         opt_rating: "별점순 (높은 순)",
         
         ph_seoul_tower: "예) 남산서울타워",
-        ph_gangnam: "예) 강남역"
+        ph_gangnam: "예) 강남역",
+        
+        lbl_address: "주소",
+        lbl_phone: "전화번호",
+        lbl_hours: "영업시간",
+        lbl_recent_reviews: "최신 리뷰",
+        no_reviews: "등록된 리뷰가 없습니다."
     }
 };
