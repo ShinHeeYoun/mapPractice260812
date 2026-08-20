@@ -1,44 +1,26 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.Properties, java.io.FileInputStream, java.io.File" %>
-<%
-    Properties props = new Properties();
-    String apiKey = "";
-    String configPath = application.getRealPath("/WEB-INF/config.properties");
-    if (configPath != null) {
-        File configFile = new File(configPath);
-        if (configFile.exists()) {
-            try (FileInputStream fis = new FileInputStream(configFile)) {
-                props.load(fis);
-                apiKey = props.getProperty("google.maps.api.key", "");
-            } catch (Exception e) {}
-        }
-    }
-    
-    // Handle Language Parameter
-    String lang = request.getParameter("lang");
-    if (lang == null || (!lang.equals("ko") && !lang.equals("en"))) {
-        lang = "en";
-    }
-%>
 <!DOCTYPE html>
-<html lang="<%=lang%>">
+<html lang="${lang}">
 <head>
     <meta charset="UTF-8">
     <title>Signatural API NEWS</title>
     <link rel="stylesheet" href="css/style.css">
-    <script>window.APP_LANG = '<%=lang%>';</script>
-    <% if (!apiKey.isEmpty()) { %>
-    <script src="https://maps.googleapis.com/maps/api/js?key=<%=apiKey%>&language=<%=lang%>&callback=initMap&libraries=places" async defer></script>
-    <% } else { %>
-    <script>console.error("Google Maps API Key not found in config.properties");</script>
-    <% } %>
+    <script>
+        window.APP_LANG = '${lang}';
+        const apiKey = '${apiKey}';
+        if (apiKey) {
+            document.write('<script src="https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&language=${lang}&callback=initMap&libraries=places" async defer><\/script>');
+        } else {
+            console.error("Google Maps API Key not found in config.properties");
+        }
+    </script>
 </head>
 <body>
     <header class="newspaper-header">
         <h1>Signatural API NEWS</h1>
         <div class="lang-toggle-container">
-            <a href="?lang=en" class="lang-btn <%= lang.equals("en") ? "active" : "" %>">EN</a> | 
-            <a href="?lang=ko" class="lang-btn <%= lang.equals("ko") ? "active" : "" %>">KR</a>
+            <a href="?lang=en" class="lang-btn ${lang == 'en' ? 'active' : ''}">EN</a> | 
+            <a href="?lang=ko" class="lang-btn ${lang == 'ko' ? 'active' : ''}">KR</a>
         </div>
         <div class="sub-header">
             <span data-i18n="vol">Vol. 1</span>
