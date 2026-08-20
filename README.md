@@ -9,13 +9,13 @@
 ```mermaid
 graph TD
     Client[Web Browser] -->|HTTP GET /index| IndexServlet
-    IndexServlet -->|RequestDispatcher.forward| JSP[View: WEB-INF/views/index.jsp]
+    IndexServlet -->|Forward| JSP[View index.jsp]
     
-    Client -->|HTTP POST /service (Fetch API)| MapServiceServlet
+    Client -->|HTTP POST /service| MapServiceServlet
     MapServiceServlet -->|Action Routing| GoogleMapsService
     GoogleMapsService -->|HTTP Request| GoogleAPI[Google Maps API]
     GoogleAPI -.->|JSON Response| GoogleMapsService
-    GoogleMapsService -.->|JSON Parsing & Sorting| MapServiceServlet
+    GoogleMapsService -.->|Parse and Sort| MapServiceServlet
     MapServiceServlet -.->|JSON| Client
 ```
 
